@@ -1,155 +1,88 @@
+from cq_server.ui import ui, show_object
 from pythonnexus.libs.sheets import fetch_data_from_excel
-from nd_spheres import find_intersection_points_of_3_spheres
+from pythonnexus.libs.cadquery.graphs import plot_spheres
+from nd_spheres import find_intersection_points_of_3_spheres, check_if_point_lies_on_a_sphere
+import cadquery as cq
 
 
-# def find_intersection_points_of_circles(c1, c2):
-#   (x1, y1, r1) = c1
-#   (x2, y2, r2) = c2
-#   # https://stackoverflow.com/questions/3349125/circle-circle-intersection-points
-#   d = ((x1 - x2)**2 + (y1 - y2)**2)**.5
-#   if d > r1 + r2:
-#       return None
-#   if d < abs(r1 - r2):
-#       return None
-#   if d == 0 and r1 == r2:
-#       return None
-#   a = (r1**2 - r2**2 + d**2) / (2 * d)
-#   h = (r1**2 - a**2)**.5
-#   x = x1 + a * (x2 - x1) / d
-#   y = y1 + a * (y2 - y1) / d
-#   x3 = x + h * (y2 - y1) / d
-#   y3 = y - h * (x2 - x1) / d
-#   x4 = x - h * (y2 - y1) / d
-#   y4 = y + h * (x2 - x1) / d
-#   return (x3, y3), (x4, y4)
-
-
-# def find_intersection_points_of_circles_manual(c1, c2):
-#   (x1, y1, r1) = c1
-#   (x2, y2, r2) = c2
+def test_pelvis_data(data_points):
+  sheet_path = 'https://docs.google.com/spreadsheets/d/1TQkhx1Id3JF_4AzuyjKbKF11K2_vlm_FVzpw6TJ6YQU/edit?gid=1931147181#gid=1931147181'
+  sheet_name = 'Sheet2'
+  # sheet_data = fetch_data_from_excel('rectum ptv.xlsx', 'Upper', ['distance from left greater trochanter', 'distance from right greater trochanter', 'distance from left si joint', 'distance from right si joint'])
+  sheet_data = fetch_data_from_excel(sheet_path, sheet_name, ['distance from left greater trochanter', 'distance from right greater trochanter', 'distance from left si joint', 'distance from right si joint', 'distance from sacral promontary', 'distance from bladder', 'distance from pubic symphysis'])
+  p_rsi = (0, 0, 0)
+  p_lsi = (10.86, 0, 0)
+  p_sp = (5.43, 0, 0)
   
-#   c1_vector = Vector(x1, y1)
-#   c2_vector = Vector(x2, y2)
-#   c1x = c1y = c2y = 0
-#   c2x = +(c2_vector - c1_vector)
+  p_rgt = (-6.34, 7.7978779164590675, 9.14)
+  # p_lgt = (17.81, 7.7978779164590675, 0)
   
-#   xiF1 = (r1**2 - r2**2 + c2x**2)/(2*c2x)
-#   # print('xiF1^2: ', xiF1**2)
-#   # print('r1^2: ', r1**2)
-#   if (r1**2 - xiF1**2) < 0:
-#     return None
+  print(f'Number of Data points: {len(sheet_data["distance from left greater trochanter"])}')
+  tolerance = 0.1
+  # print(sheet_data)
+  for distances in zip( sheet_data['distance from right si joint'], sheet_data['distance from left si joint'], sheet_data['distance from sacral promontary'], sheet_data['distance from right greater trochanter'], sheet_data['distance from left greater trochanter']):
+    print(f'====================================\nDistances: {distances}\n====================================')
 
-#   yi1F1 = (r1**2 - xiF1**2)**0.5
-#   yi2F1 = -((r1**2 - xiF1**2)**0.5)
-#   Dx = xiF1
-#   Dy = yi1F1
-#   del_c = c2_vector - c1_vector
-#   Dc = +del_c
-#   r_cap_c = del_c / Dc
-#   # print('r_cap_c: ', r_cap_c)
-#   piF0 = c1_vector + (r_cap_c * Dx)
-#   # print('piF0: ', piF0)
-#   # print('Dx: ', Dx, 'Dy: ', Dy)
-#   n_cap = Vector(-r_cap_c.vy, r_cap_c.vx)
-#   # print('n_cap: ', n_cap)
-#   # print(n_cap*Dy)
-#   P1F0 = piF0 + (n_cap * Dy)
-#   P2F0 = piF0 - (n_cap * Dy)
-  
-#   return (P1F0.vx, P1F0.vy), (P2F0.vx, P2F0.vy)
-
-  
-def check_if_point_lies_on_a_circle(c, p, tolerance=0.0001):
-  (x, y, r) = c
-  (px, py) = p
-  return abs((px - x)**2 + (py - y)**2 - r**2) < tolerance
-
-
-def testing():
-  pass
-  # c1 = (0, 0, 10)
-  # c2 = (20, 0, 10)
-  # (p1, p2) = find_intersection_points_of_circles(c1, c2)
-  # print(f'Stack -> P1: {p1}, P2: {p2}')
-  # (p3, p4) = find_intersection_points_of_circles_manual(c1, c2)
-  # print(f'Original -> P1: {p3}, P2: {p4}')
-
-
-def test_pelvis_data():
-  sheet_data = fetch_data_from_excel('rectum ptv.xlsx', 'Upper', ['distance from left greater trochanter', 'distance from right greater trochanter', 'distance from left si joint', 'distance from right si joint'])
-  distance_from_left_greater_trochanter_coordinates = (0, 0)
-  distance_from_right_greater_trochanter_coordinates = (0, 1)
-  distance_from_left_si_joint_coordinates = (0, 0)
-  distance_from_right_si_joint_coordinates = (103.5, 0)
-  data_points = []
-
-  for distances in zip(sheet_data['distance from left greater trochanter'], sheet_data['distance from right greater trochanter'], sheet_data['distance from left si joint'], sheet_data['distance from right si joint']):
-    c1 = (distance_from_left_greater_trochanter_coordinates[0], distance_from_left_greater_trochanter_coordinates[1], distances[0])
-    c2 = (distance_from_right_greater_trochanter_coordinates[0], distance_from_right_greater_trochanter_coordinates[1], distances[1])
-    c3 = (distance_from_left_si_joint_coordinates[0], distance_from_left_si_joint_coordinates[1], distances[2])
-    c4 = (distance_from_right_si_joint_coordinates[0], distance_from_right_si_joint_coordinates[1], distances[3])
-    # intersection1 = find_intersection_points_of_circles(c1, c2)
-    # intersection2 = find_intersection_points_of_circles(c3, c4)
+    s1 = (p_rsi[0], p_rsi[1], p_rsi[2], float(distances[0]))
+    s2 = (p_lsi[0], p_lsi[1], p_lsi[2], float(distances[1]))
+    s3 = (p_sp[0], p_sp[1], p_sp[2], float(distances[2]))
+    print(f'Spheres: {s1}, {s2}, {s3}')
+    cq_s1 = cq.Workplane().pushPoints([(s1[0], s1[1], s1[2])]).sphere(s1[3])
+    cq_s2 = cq.Workplane().pushPoints([(s2[0], s2[1], s2[2])]).sphere(s2[3])
+    cq_s3 = cq.Workplane().pushPoints([(s3[0], s3[1], s3[2])]).sphere(s3[3])
+    show_object(cq_s1, name='s1', options={'color': 'red'})
+    show_object(cq_s2, name='s2', options={'color': 'green'})
+    show_object(cq_s3, name='s3', options={'color': 'blue'})
     
-    # if intersection1 is not None:
-    #   p1, p2 = intersection1
-    # if intersection2 is not None:
-    #   p3, p4 = intersection2
+    # exit(0)
     
-    # if intersection1:
-    #   print('p1: ', p1, 'p2: ',  p2)
-    # if intersection2:
-    #   print('p3: ', p3, 'p4: ', p4)
+    (p1, p2) = find_intersection_points_of_3_spheres(s1, s2, s3, tolerance=tolerance)
     
+    if p1 and p2:
+      if check_if_point_lies_on_a_sphere((p_rgt[0], p_rgt[1], p_rgt[2], float(distances[3])), p1, tolerance=tolerance):
+        print(f'P1: {p1} is on the sphere!')
+        # data_points.append(p1)
+      else:
+        print(f'P1: {p1} is not on the sphere, ignoring')
+        
+      if check_if_point_lies_on_a_sphere((p_rgt[0], p_rgt[1], p_rgt[2], float(distances[3])), p2, tolerance=tolerance):
+        print(f'P2: {p2} is on the sphere!')
+        data_points.append(p2)
+      else:
+        print(f'P2: {p2} is not on the sphere, ignoring')
+    else:
+      print('No intersection points found!')
 
-if __name__ == '__main__':
-  testing()
-  # A = Vector(2, -3)
-  # B = Vector(2, 1)
-  
-  # print((A * (+A)))
-  
-  
-  
-  
-# ------------------------------------------------------------------------------------------------------------------------
-# Visualising the data points using cadquery
-# ------------------------------------------------------------------------------------------------------------------------
-  
-  
-# import cadquery as cq
-# # from cadquery import show_object
-# from cq_server.ui import ui, show_object
 
-# height = 60.0
-# width = 80.0
-# thickness = 10.0
-# diameter = 22.0
-# padding = 12.0
-
-# # # make the base
+data_points = []
+test_pelvis_data(data_points=data_points)
+print(f'Data points: {data_points}')
+print(f'Number of Data points we got: {len(data_points)}')
 # result = (
-#     cq.Workplane("XY")
-#     .circle(10)
-#     .workplane("XZ")
-#     .faces(">Z")
-#     .workplane("XY")
-#     .rect(5, 5)
-#     .vertices()
-#     .circle(.01, forConstruction=True)
-#     .pushPoints([(0, 0), (10, 0), (10, 10), (0, 10)])
-    
+#   cq.Workplane()
+#   .pushPoints(data_points)
+#   .sphere(.1)
 # )
 
-# result = cq.importers.importStep('./Pelvis AP203.STEP')
-
-# Render the solid
 # show_object(result)
 
-# print(fetch_data_from_excel('rectum ptv.xlsx', 'Sheet1', ['distance from left greater trochanter']))
 
+# result = (
+#     cq.Workplane()
+#     .pushPoints([(0, 0, 0), (10, 0, 0)])
+#     .sphere(20)
+#     .pushPoints([(10, 17.32, 0)])
+#     .sphere(20)
+#     .pushPoints([(p1[0], p1[1], p1[2]), (p2[0], p2[1], p2[2])])
+#     .sphere(.5)
+#     # .circle(10)
+#     # .workplane("XZ")
+#     # .faces(">Z")
+#     # .workplane("XY")
+#     # .rect(5, 5)
+#     # .vertices()
+#     # .circle(.01, forConstruction=True)
+#     # .pushPoints([(0, 0), (10, 0), (10, 10), (0, 10)])
+# )
 
-# Export
-# cq.exporters.export(result, "result.stl")
-# cq.exporters.export(result.section(), "result.dxf")
-# cq.exporters.export(result, "result.step")
+# show_object(result)
