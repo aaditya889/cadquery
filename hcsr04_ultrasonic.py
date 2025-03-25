@@ -1,5 +1,6 @@
 import cadquery as cq
-from cq_server.ui import ui, show_object, debug
+# from cq_server.ui import ui, show_object, debug
+from ocp_vscode import *
 
 chip_length = 45.2
 chip_width = 20.2
