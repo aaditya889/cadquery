@@ -31,4 +31,3 @@ assembled_chip.add(mic_case, color=cq.Color(0, 1, 0), name="mic_case")
 # debug(chip_case.add(mic_case))
 # show_object(result)
 show_object(assembled_chip)
-
