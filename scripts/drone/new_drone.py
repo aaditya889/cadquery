@@ -61,4 +61,4 @@ assembled_drone.add(battery_holder, loc=cq.Location(cq.Vector((0, 0, -(drone_bas
 show_object(assembled_drone)
 
 # exporters.export(motor_holder, "export/new_drone.stl")
-assembled_drone.export("export/new_drone.stl", "STL")
+# assembled_drone.export("export/new_drone.stl", "STL")

@@ -1,5 +1,7 @@
 import sys
 import os
+from cadquery import exporters
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.append(parent_dir)
@@ -25,19 +27,19 @@ defaultSweep = cq.Workplane("XY").circle(1.0).sweep(path)
 # )
 
 propeller_model = create_propeller(
-    prop_radius=75,
-    hub_radius=10,
-    hub_height=20,
-    num_blades=3,
-    twist_at_hub=35,
+    prop_radius=60,
+    hub_radius=7.2,
+    hub_height=10,
+    rotor_hole_radius=3,
+    num_blades=4,
+    num_sections=3,
+    twist_at_hub=40,
     twist_at_tip=12,
-    chord_at_hub=20,
-    chord_at_tip=12
+    chord_at_hub=15,
+    chord_at_tip=10,
+    fillet_radius=0.5
 )
 
-# propeller_airfoil = propeller_airfoil.twistExtrude(100, 20)
 show_object(propeller_model)
+exporters.export(propeller_model, "export/propeller_model.stl")
 
-# You can visualize or export the model using:
-# vacuum_airfoil.toSvg()
-# vacuum_airfoil.exportStep("vacuum_rotor_airfoil.step")

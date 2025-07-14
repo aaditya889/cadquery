@@ -76,8 +76,9 @@ def create_propeller(
     prop_radius=60.0,
     hub_radius=8.0,
     hub_height=10.0,
+    rotor_hole_radius=5,
     num_blades=3,
-    num_sections=12,
+    num_sections=3,
     twist_at_hub=40.0,
     twist_at_tip=15.0,
     chord_at_hub=18.0,
@@ -107,6 +108,12 @@ def create_propeller(
     
     # A list to hold the 2D airfoil cross-sections (as Wires)
     airfoil_sections = []
+    hub = (cq.Workplane("XY")
+          .circle(hub_radius)
+          .extrude(hub_height)
+          .translate((0, 0, -hub_height / 1.3)) # Center hub vertically
+          )
+    # hub = hub.faces(">Z").circle(5).cutThruAll()
 
     # --- 1. Generate the cross-sections for a single blade ---
     for i in range(num_sections):
@@ -119,7 +126,7 @@ def create_propeller(
         current_chord = chord_at_hub + fraction * (chord_at_tip - chord_at_hub)
         
         # Calculate the intended radial position for this section
-        radial_pos = hub_radius + fraction * blade_length
+        radial_pos = hub_radius*0.1 + fraction * blade_length
         
         # For the root section (i=0), we pull it slightly inside the hub.
         # This creates a deliberate overlap, making the final boolean union
@@ -133,17 +140,23 @@ def create_propeller(
         # Special handling for the root section to create a smooth blend
         if i == 0:
             # Create an elliptical base on the XZ plane for a smooth transition
-            x_radius = current_chord / 2.0
-            z_radius = (current_chord * blade_thickness_ratio) / 2.0
+            x_radius = current_chord / 4.0
+            z_radius = (current_chord * blade_thickness_ratio) / 4.0
             
             print(f"D2")
-            blend_shape = cq.Workplane("XZ").ellipse(x_radius, z_radius).wire().val()
+            chord_length = hub_height/2.0
+            blend_shape = create_airfoil(
+                            chord_length=chord_length,
+                            max_camber=0.06,
+                            max_camber_pos=0.3,
+                            thickness=blade_thickness_ratio
+                        ).wire().val()
             
             # The blend shape is already on the XZ plane, so we just twist and translate
             transformed_wire = (
                 blend_shape
                 .rotate((0, 0, 0), (0, 1, 0), current_twist) # Apply twist
-                .translate((0, translation_radius, 0))      # Move to its radial position
+                .translate((chord_length * math.cos(current_twist * math.pi/180), 0, -chord_length * math.sin(current_twist * math.pi/180)))      # Move to its radial position
             )
             print(f"D3")
         else:
@@ -155,9 +168,9 @@ def create_propeller(
                 thickness=blade_thickness_ratio
             )
             print(f"D4")
-            
+        
             airfoil_wire = airfoil_profile.wire().val()
-            
+        
             # Transform the airfoil wire to its 3D position and orientation
             transformed_wire = (
                 airfoil_wire
@@ -165,20 +178,19 @@ def create_propeller(
                 .rotate((0, 0, 0), (0, 1, 0), current_twist) # Apply twist
                 .translate((0, translation_radius, 0))      # Move to its radial position
             )
-        print(f"D5")
+            print(f"D5")
+                
         airfoil_sections.append(transformed_wire)
 
     # --- 3. Create the 3D blade by lofting through the sections ---
     print(f"D6")
+    # print(airfoil_sections)
+    # return airfoil_sections
     single_blade = cq.Solid.makeLoft(airfoil_sections)
     print(f"D7")
     
     # --- 4. Create the central hub with filleted edges ---
-    hub = (cq.Workplane("XY")
-           .circle(hub_radius)
-           .extrude(hub_height)
-           .translate((0, 0, -hub_height / 2.0)) # Center hub vertically
-          )
+
     # Add fillets to the top and bottom edges of the hub for a smoother look
     if fillet_radius > 0:
         hub = hub.edges(">Z or <Z").fillet(fillet_radius)
@@ -193,7 +205,16 @@ def create_propeller(
         all_blades.add(rotated_blade)
         
     # --- 6. Combine the hub and all blades into a single object ---
+    # all_blades = all_blades.combine().clean()
+    print("Combining...")
+    all_blades = all_blades.combine(glue=True)
     print("Taking the union...")
-    propeller = hub.union(all_blades.combine().val())
+    propeller = hub.union(all_blades.val(), glue=True)
+    print(f"Creating the rotor slot...")
+    rotor_hole = cq.Workplane("XY").circle(rotor_hole_radius).extrude(hub_height).translate((0, 0, -hub_height / 1.3))
+    propeller = propeller.cut(rotor_hole)
+    print(f"Done!")
+    # propeller = propeller.clean()
+    # propeller = all_blades.combine(glue=True)
     
     return propeller
