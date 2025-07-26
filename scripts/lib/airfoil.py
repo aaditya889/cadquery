@@ -37,7 +37,8 @@ def create_airfoil(chord_length=100.0, max_camber=0.04, max_camber_pos=0.4, thic
   
     # Calculate thickness distribution - modified NACA thickness formula
     # Using a slightly modified formula for better leading edge
-    yt[i] = 5 * thickness * (0.2969 * np.sqrt(xx) - 0.1260 * xx - 0.3516 * xx**2 + 0.2843 * xx**3 - 0.1015 * xx**4)
+    # yt[i] = 5 * thickness * (0.2969 * np.sqrt(xx) - 0.1260 * xx - 0.3516 * xx**2 + 0.2843 * xx**3 - 0.1015 * xx**4)
+    yt[i] = 4.5 * thickness * (0.33 * np.sqrt(xx) - 0.1260 * xx - 0.3516 * xx**2 + 0.2843 * xx**3 - 0.1015 * xx**4)
     
     # Calculate surface coordinates
     theta = np.arctan(dyc_dx[i])
@@ -104,7 +105,7 @@ def create_propeller(
         cadquery.Workplane: A workplane containing the final 3D propeller model.
     """
     blade_length = prop_radius - hub_radius
-    blade_thickness_ratio = 0.14 # Matches the thickness used in create_airfoil
+    blade_thickness_ratio = 0.20 # Matches the thickness used in create_airfoil
     
     # A list to hold the 2D airfoil cross-sections (as Wires)
     airfoil_sections = []
@@ -113,7 +114,7 @@ def create_propeller(
           .extrude(hub_height)
           .translate((0, 0, -hub_height / 1.3)) # Center hub vertically
           )
-    # hub = hub.faces(">Z").circle(5).cutThruAll()
+    hub = hub.faces(">Z").circle(rotor_hole_radius).cutThruAll()
 
     # --- 1. Generate the cross-sections for a single blade ---
     for i in range(num_sections):
@@ -144,10 +145,10 @@ def create_propeller(
             z_radius = (current_chord * blade_thickness_ratio) / 4.0
             
             print(f"D2")
-            chord_length = hub_height/2.0
+            chord_length = hub_height / 1.2
             blend_shape = create_airfoil(
                             chord_length=chord_length,
-                            max_camber=0.06,
+                            max_camber=0.1,
                             max_camber_pos=0.3,
                             thickness=blade_thickness_ratio
                         ).wire().val()
@@ -155,9 +156,10 @@ def create_propeller(
             # The blend shape is already on the XZ plane, so we just twist and translate
             transformed_wire = (
                 blend_shape
+                .rotate((0, 0, 0), (1, 0, 0), 90) # Apply twist
                 .rotate((0, 0, 0), (0, 1, 0), current_twist) # Apply twist
-                .translate((chord_length * math.cos(current_twist * math.pi/180), 0, -chord_length * math.sin(current_twist * math.pi/180)))      # Move to its radial position
-            )
+                # .translate((chord_length * math.cos(current_twist * math.pi/180), 0, -chord_length * math.sin(current_twist * math.pi/180)))
+                )
             print(f"D3")
         else:
             # Create the standard airfoil shape for the rest of the blade
@@ -212,7 +214,7 @@ def create_propeller(
     propeller = hub.union(all_blades.val(), glue=True)
     print(f"Creating the rotor slot...")
     rotor_hole = cq.Workplane("XY").circle(rotor_hole_radius).extrude(hub_height).translate((0, 0, -hub_height / 1.3))
-    propeller = propeller.cut(rotor_hole)
+    # propeller = propeller.cut(rotor_hole)
     print(f"Done!")
     # propeller = propeller.clean()
     # propeller = all_blades.combine(glue=True)

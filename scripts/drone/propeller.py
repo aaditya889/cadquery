@@ -27,12 +27,12 @@ defaultSweep = cq.Workplane("XY").circle(1.0).sweep(path)
 # )
 
 propeller_model = create_propeller(
-    prop_radius=60,
+    prop_radius=55,
     hub_radius=7.2,
     hub_height=10,
     rotor_hole_radius=3,
     num_blades=4,
-    num_sections=3,
+    num_sections=6,
     twist_at_hub=40,
     twist_at_tip=12,
     chord_at_hub=15,
