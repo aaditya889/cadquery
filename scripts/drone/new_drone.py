@@ -1,6 +1,10 @@
 import cadquery as cq
 from cadquery import exporters
 from ocp_vscode import show_object
+import os, sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(parent_dir)
 from lib.hollow import *
 
 multiplier = 1
