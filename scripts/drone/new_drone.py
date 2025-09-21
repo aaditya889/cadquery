@@ -25,7 +25,7 @@ pcb_holder_plate_width_mm = 80 * multiplier
 battery_holder_thickness_mm = 4 * multiplier
 battery_holder_length_mm = (140) * multiplier
 battery_holder_width_mm = (50) * multiplier
-battery_holder_height_mm = (26) * multiplier
+battery_holder_height_mm = (32) * multiplier
 
 motor_base_thickness_mm = 4 * multiplier
 motor_base_radius_mm = 29/2 * multiplier
@@ -40,13 +40,13 @@ motor_screw_coordinates = [(0, motor_screw_distance_from_center_mm),
                            (0, -motor_screw_distance_from_center_mm)]
 
 esc_length = 57
-esc_width = 26
-esc_height = 8
+esc_width = 32
+esc_height =13
 esc_holder_thickness = 2 * multiplier
-esc_connector_wire_hole_radius = 4
+esc_connector_wire_hole_radius = 7
 
-switch_length = 19
-switch_width = 12
+switch_length = 21
+switch_width = 15
 switch_height = 11
 switch_holder_thickness = 1
 switch_pin_1_distance = 2

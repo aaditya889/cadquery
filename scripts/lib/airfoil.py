@@ -105,7 +105,7 @@ def create_propeller(
         cadquery.Workplane: A workplane containing the final 3D propeller model.
     """
     blade_length = prop_radius - hub_radius
-    blade_thickness_ratio = 0.20 # Matches the thickness used in create_airfoil
+    blade_thickness_ratio = 0.25 # Matches the thickness used in create_airfoil
     
     # A list to hold the 2D airfoil cross-sections (as Wires)
     airfoil_sections = []
@@ -214,9 +214,10 @@ def create_propeller(
     propeller = hub.union(all_blades.val(), glue=True)
     print(f"Creating the rotor slot...")
     rotor_hole = cq.Workplane("XY").circle(rotor_hole_radius).extrude(hub_height).translate((0, 0, -hub_height / 1.3))
-    # propeller = propeller.cut(rotor_hole)
+    # propeller = propeller.faces(">Z").workplane().circle(rotor_hole_radius).cutThruAll()
+    # propeller = propeller.cut(rotor_hole, clean=False)
     print(f"Done!")
-    # propeller = propeller.clean()
+    propeller = propeller.clean()
     # propeller = all_blades.combine(glue=True)
     
     return propeller

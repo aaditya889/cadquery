@@ -27,19 +27,23 @@ defaultSweep = cq.Workplane("XY").circle(1.0).sweep(path)
 # )
 
 propeller_model = create_propeller(
-    prop_radius=55,
-    hub_radius=7.2,
+    prop_radius=80,
+    hub_radius=8,
     hub_height=10,
-    rotor_hole_radius=3,
+    rotor_hole_radius=5,
     num_blades=4,
-    num_sections=6,
+    num_sections=3,
     twist_at_hub=40,
     twist_at_tip=12,
-    chord_at_hub=15,
-    chord_at_tip=10,
-    fillet_radius=0.5
+    chord_at_hub=20,
+    chord_at_tip=6,
+    fillet_radius=0.8
 )
 
-show_object(propeller_model)
+finalPropeller = cq.Assembly()
+finalPropeller.add(propeller_model)
+# finalPropeller.add(rotor_hole)
+
+show_object(finalPropeller)
 exporters.export(propeller_model, "export/propeller_model.stl")
 
