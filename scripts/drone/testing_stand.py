@@ -25,17 +25,19 @@ ball_bearing_height = 5
 topmost_point = cq.Vector(0, 0, drone_height/2)
 pillar_ball_bearing_origin = topmost_point - cq.Vector(0, 0, ball_bearing_radius + ball_bearing_thickness + 3)
 
-y_rotation_stand_base = create_solid_box(drone_width + error_margin, base_part_width, base_part_height)
-y_ball_bearing_cylinder = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "XZ")
-y_rotation_stand_base = y_rotation_stand_base.faces(">Y").workplane().circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+stand_base = create_solid_box(drone_width + error_margin, base_part_width, base_part_height)
 
-x_ball_bearing_cylinder_1 = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "YZ")
+stand_base = stand_base.faces(">Y").workplane().circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+ball_bearing_cylinder = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "YZ")
+
 pillar_parts = create_solid_box(drone_height, stand_part_width, stand_part_height, workplane="ZY")
 pillar_parts = pillar_parts.faces(">X").workplane(origin=pillar_ball_bearing_origin).circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+
 stand_pillar = cq.Assembly()
 stand_pillar.add(pillar_parts, name="main_pillar")
-stand_pillar.add(x_ball_bearing_cylinder_1, loc=cq.Location(pillar_ball_bearing_origin), name="ball_bearing", color="blue")
+stand_pillar.add(ball_bearing_cylinder, loc=cq.Location(pillar_ball_bearing_origin), name="ball_bearing", color="blue")
 stand_pillar = stand_pillar.toCompound()
+
 stand_pillar1 = stand_pillar.translate(cq.Vector((drone_width + error_margin + stand_part_height)/2, 0, (drone_height - base_part_height)/2))
 stand_pillar2 = stand_pillar.translate(cq.Vector(-(drone_width + error_margin + stand_part_height)/2, 0, (drone_height - base_part_height)/2))
 
@@ -46,7 +48,7 @@ stand_pillar2 = stand_pillar.translate(cq.Vector(-(drone_width + error_margin + 
 
 
 y_assembled = cq.Assembly()
-y_assembled.add(y_rotation_stand_base, color="yellow", name="y_base")
+y_assembled.add(stand_base, color="yellow", name="y_base")
 y_assembled.add(stand_pillar1, color="red", name="pillar_1")
 y_assembled.add(stand_pillar2, color="green", name="pillar_2")
 y_assembled.add(y_ball_bearing_cylinder, color="blue", name="ball")
