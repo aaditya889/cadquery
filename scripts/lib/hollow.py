@@ -22,3 +22,11 @@ def create_hollow_box_with_two_open_faces(length, width, height, thickness, work
   hollow_box = hollow_box.faces("<X").rect(2*thickness, width + thickness/2).cutThruAll()
   hollow_box = hollow_box.faces(">X").rect(2*thickness, width + thickness/2).cutThruAll()
   return hollow_box
+
+def create_hollow_cylinder_with_two_open_faces(radius, height, thickness, workplane="XY"):
+  main_cylinder = cq.Workplane(workplane).cylinder(height, radius + thickness)
+  main_cylinder = main_cylinder.workplane().circle(radius).cutThruAll()
+  # hollow_box = main_cylinder.cutThruAll()
+  # hollow_box = hollow_box.faces("<X").rect(2*thickness, width + thickness/2).cutThruAll()
+  # hollow_box = hollow_box.faces(">X").rect(2*thickness, width + thickness/2).cutThruAll()
+  return main_cylinder

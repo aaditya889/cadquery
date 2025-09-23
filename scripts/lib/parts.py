@@ -33,3 +33,6 @@ class AssembledPart():
     next(iter(self.original_assembled.objects.values())).loc *= rotation_vector
     
     return self.original_assembled
+
+  def export(self, name):
+    self.original_assembled.export(f"export/{name}.stl", "STL")
