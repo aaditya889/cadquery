@@ -1,21 +1,16 @@
 import cadquery as cq
+from cadquery import exporters
 from ocp_vscode import show_object
+import os, sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.append(parent_dir)
+from lib.injected_parts.hooks import *
 
-length = 45.2
-width = 20.2
-thickness = 1.6
-overall_thickness = 2.0
-
-body = cq.Workplane("XY").box(length, width, thickness)
-
-# chip_case = chip_case.faces(">Z").add(mic_case)
+male_hook_1 = create_male_u_hook()
+male_hook_2 = create_male_u_hook()
 assembled = cq.Assembly()
+assembled.add(male_hook_1, loc=cq.Location(cq.Vector(0, 0, 0)), name="male_hook_1", color="red")
+assembled.add(male_hook_1, loc=cq.Location(cq.Vector(0, 0, 5)), name="male_hook_2", color="blue")
 
-assembled.add(body, color=cq.Color(1, 0, 0), name="chip_case")
-# result = cq.Workplane("XY").box(1, 2, 3).faces(">Z").vertices().circle(0.5).cutThruAll()
-
-
-# show_object(result)
-# debug(chip_case.add(mic_case))
-# show_object(result)
 show_object(assembled)

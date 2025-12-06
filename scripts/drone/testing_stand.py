@@ -9,60 +9,48 @@ from lib.solid import *
 from lib.hollow import *
 from lib.parts import *
 
-drone_width = 400
+drone_width = 390
 drone_height = 200
-base_part_height = 30
-error_margin = 5
-stand_part_width = 20
+base_part_height = 25
+error_margin = 0
+stand_part_width = 40
+stand_part_height = 150
 base_part_width = 7
-stand_part_height = 7
-ball_bearing_radius = 6.75
+stand_part_thickness = 10
+ball_bearing_radius = 13
 ball_bearing_thickness = 2
 ball_bearing_height = 5
-# ball_bearing_outer_radius = ball_bearing_radius + ball_bearing_thickness
 
-# test_box = create_solid_box(300, 10, 10)
-topmost_point = cq.Vector(0, 0, drone_height/2)
-pillar_ball_bearing_origin = topmost_point - cq.Vector(0, 0, ball_bearing_radius + ball_bearing_thickness + 3)
-
-stand_base = create_solid_box(drone_width + error_margin, base_part_width, base_part_height)
-
-stand_base = stand_base.faces(">Y").workplane().circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+topmost_point = cq.Vector(0, 0, stand_part_height/2)
+stand_base_point = cq.Vector(0, 0, -stand_part_height/2)
+pillar_ball_bearing_origin = topmost_point - cq.Vector(0, 0, ball_bearing_radius + ball_bearing_thickness + 0.5 * ball_bearing_radius)
+y_ball_bearing_cylinder = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "XZ")
 ball_bearing_cylinder = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "YZ")
 
-pillar_parts = create_solid_box(drone_height, stand_part_width, stand_part_height, workplane="ZY")
-pillar_parts = pillar_parts.faces(">X").workplane(origin=pillar_ball_bearing_origin).circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+stand_base = create_solid_box(drone_width + error_margin, base_part_width, base_part_height)
+stand_base = stand_base.faces(">Y").workplane().circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
 
+pillar_parts = create_solid_box(stand_part_height, stand_part_width, stand_part_thickness, workplane="ZY")
+pillar_parts = pillar_parts.faces(">X").workplane(origin=pillar_ball_bearing_origin).circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
+pillar_parts = pillar_parts.faces(">X").workplane(origin=stand_base_point + cq.Vector(0, 0, base_part_height/2)).rect(base_part_width, base_part_height + 2).cutThruAll()
+
+stand_base = cq.Assembly().add(stand_base, name="base").add(y_ball_bearing_cylinder).toCompound()
 stand_pillar = cq.Assembly()
 stand_pillar.add(pillar_parts, name="main_pillar")
 stand_pillar.add(ball_bearing_cylinder, loc=cq.Location(pillar_ball_bearing_origin), name="ball_bearing", color="blue")
 stand_pillar = stand_pillar.toCompound()
 
-stand_pillar1 = stand_pillar.translate(cq.Vector((drone_width + error_margin + stand_part_height)/2, 0, (drone_height - base_part_height)/2))
-stand_pillar2 = stand_pillar.translate(cq.Vector(-(drone_width + error_margin + stand_part_height)/2, 0, (drone_height - base_part_height)/2))
-
-# x_ball_bearing_cylinder_2 = create_hollow_cylinder_with_two_open_faces(ball_bearing_radius, ball_bearing_height, ball_bearing_thickness, "YZ")
-# y_rotation_stand_pillar2 = create_solid_box(drone_height, stand_part_width, stand_part_height, workplane="ZY", origin=(-(drone_width + error_margin + stand_part_height)/2, 0, (drone_height - base_part_height)/2))
-# y_rotation_stand_pillar2 = y_rotation_stand_pillar2.faces(">X").workplane(origin=pillar_ball_bearing_origin).circle(ball_bearing_radius + ball_bearing_thickness/2).cutThruAll()
-# y_rotation_stand_pillar2 = cq.Assembly().add(y_rotation_stand_pillar2, name="main_pillar").add(x_ball_bearing_cylinder_2, loc=cq.Location(cq.Vector(-(drone_width)/2, 0, drone_height - 2*ball_bearing_radius - 2*ball_bearing_thickness)), name="ball_bearing", color="blue")
-
+stand_pillar1 = stand_pillar.translate(cq.Vector((drone_width + error_margin + stand_part_thickness)/2, 0, (stand_part_height - base_part_height)/2))
+stand_pillar2 = stand_pillar.translate(cq.Vector(-(drone_width + error_margin + stand_part_thickness)/2, 0, (stand_part_height - base_part_height)/2))
 
 y_assembled = cq.Assembly()
 y_assembled.add(stand_base, color="yellow", name="y_base")
 y_assembled.add(stand_pillar1, color="red", name="pillar_1")
 y_assembled.add(stand_pillar2, color="green", name="pillar_2")
-y_assembled.add(y_ball_bearing_cylinder, color="blue", name="ball")
+# y_assembled.add(y_ball_bearing_cylinder, color="blue", name="ball")
 
-# assy = AssembledPart(y_assembled)
-# x_assembled = assy.clone_and_rotate(axis="Z", angle=90)
-# y_assembled.add(x_assembled, name="x_assembled")
-# for i in test_ass.objects.values():
-#   if (not i.name.startswith("y")):
-#     continue
-#   print(i.name)
-#   i.loc *= rotation_vector
-# x_assembled = y_assembled.toCompound().rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), 90).translate(cq.Vector(0, 0, -(drone_width + error_margin/2)))
-# y_assembled = y_assembled.add(x_assembled, name="x_assembled", color="red")
-show_object(y_assembled)
+show_object(stand_pillar1)
 # y_assembled.export("export/testing_stand.stl", "STL")
-exporters.export(y_ball_bearing_cylinder, "export/testing_stand.stl")
+exporters.export(stand_pillar1, "export/stand_pillar.stl")
+
+

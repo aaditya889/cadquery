@@ -21,6 +21,8 @@ drone_base_battery_pillar_height_mm = 0 * multiplier
 
 pcb_holder_plate_length_mm = 100 * multiplier
 pcb_holder_plate_width_mm = 80 * multiplier
+pcb_holder_height = 20
+pcb_holder_thickness = 2
 
 battery_holder_thickness_mm = 4 * multiplier
 battery_holder_length_mm = (140) * multiplier
@@ -72,7 +74,9 @@ motor_holder = motor_holder.cut(wire_pocket)
 battery_holder = create_hollow_box_with_two_open_faces(battery_holder_length_mm, battery_holder_width_mm, battery_holder_height_mm, battery_holder_thickness_mm)
 battery_holder = battery_holder.faces(">Y").workplane(origin=cq.Vector(0, 0, battery_holder_height_mm/4)).circle(esc_connector_wire_hole_radius).cutBlind(-battery_holder_thickness_mm)
 battery_holder = battery_holder.faces("<Y").workplane().circle(esc_connector_wire_hole_radius).cutBlind(-battery_holder_thickness_mm)
-battery_holder = battery_holder.translate(cq.Vector((0, 0, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2))))
+battery_holder.faces("<<Z").tag("batteryHolderBottom").end()
+battery_holder.faces(">>Z").tag("batteryHolderRoof").end()
+# battery_holder = battery_holder.translate(cq.Vector((0, 0, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2))))
 
 esc_holder = create_hollow_box_with_two_open_faces(esc_length, esc_width, esc_height, esc_holder_thickness).rotate(cq.Vector(0, 0, 0), cq.Vector(1, 0, 0), 90)
 
@@ -82,11 +86,24 @@ switch_pin_1_location = cq.Vector(-switch_length/2 + switch_pin_1_distance, 0, 0
 switch_pin_2_location = cq.Vector(-switch_length/2 + switch_pin_2_distance, 0, 0)
 switch_holder = switch_holder.faces(">Z").workplane(origin=switch_pin_1_location).rect(switch_pin_thickness, switch_pin_width).cutThruAll()
 switch_holder = switch_holder.faces(">Z").workplane(origin=switch_pin_2_location).rect(switch_pin_thickness, switch_pin_width).cutThruAll()
-switch_holder = switch_holder.translate(switch_location)
+# switch_holder = switch_holder.translate(switch_location)
+switch_holder.edges("<X and >Y").tag("switchHolderFrontEdge").end()
+switch_holder.edges("<X and <Z").tag("switchHolderBottomEdge").end()
+switch_holder.vertices("<X and >Z and >Y").tag("switchHolderTopRightVertex").end()
 
 drone_base = drone_base.cut(switch_holder)
 battery_holder = battery_holder.cut(switch_holder)
 battery_holder = battery_holder.faces(">Z").workplane(origin=cq.Vector((pcb_holder_plate_length_mm + switch_length + switch_holder_thickness)/2, (drone_base_leg_width_mm*2 + switch_width + switch_holder_thickness)/2, (drone_base_thickness_mm/2))).rect(switch_length + switch_holder_thickness, switch_width + switch_holder_thickness).cutBlind(-battery_holder_thickness_mm)
+
+
+_pcb_holder_cut = cq.Workplane("XY").box(pcb_holder_plate_length_mm, pcb_holder_plate_width_mm, pcb_holder_height).translate(cq.Vector(0, 0, -(pcb_holder_height - pcb_holder_thickness - drone_base_thickness_mm)/2))
+pcb_holder = create_hollow_box_with_open_face(pcb_holder_plate_length_mm, pcb_holder_plate_width_mm, pcb_holder_height, pcb_holder_thickness).translate(cq.Vector(0, 0, -(pcb_holder_height - pcb_holder_thickness - drone_base_thickness_mm)/2))
+drone_base = drone_base.cut(_pcb_holder_cut)
+pcb_holder.edges(">X and >Y").tag("pcbHolderFrontEdge").end()
+pcb_holder.edges(">X and <Z").tag("pcbHolderBottomEdge").end()
+pcb_holder.vertices(">X and >Z and >Y").tag("pcbHolderTopRightVertex").end()
+# battery_holder = battery_holder.cut(_pcb_holder_cut)
+# esc_holder = esc_holder.cut(_pcb_holder_cut)
 
 assembled_drone = cq.Assembly()
 assembled_drone.add(drone_base, loc=(cq.Location(cq.Vector((0, 0, 0)))), color=cq.Color("blue"), name="drone_base")
@@ -94,14 +111,30 @@ assembled_drone.add(motor_holder.rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), 
 assembled_drone.add(motor_holder, loc=cq.Location(cq.Vector((0, drone_base_length_mm/2, -drone_base_thickness_mm/2))), color=cq.Color("red"), name="motor_holder_2")
 assembled_drone.add(motor_holder.rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), 180), loc=cq.Location(cq.Vector((0, -drone_base_length_mm/2, -drone_base_thickness_mm/2))), color=cq.Color("red"), name="motor_holder_3")
 assembled_drone.add(motor_holder.rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), 90), loc=cq.Location(cq.Vector((-drone_base_length_mm/2, 0, -drone_base_thickness_mm/2))), color=cq.Color("red"), name="motor_holder_4")
-assembled_drone.add(battery_holder, color=cq.Color("green"), name="battery_holder")
+# assembled_drone.add(battery_holder, color=cq.Color("green"), name="battery_holder")
 
-assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((battery_holder_length_mm/2 - esc_length/2, -(battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_1")
-assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((-(battery_holder_length_mm/2 - esc_length/2), -(battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_2")
-assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((-(battery_holder_length_mm/2 - esc_length/2), (battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_3")
-assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector(((battery_holder_length_mm/2 - esc_length/2), (battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_4")
+# assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((battery_holder_length_mm/2 - esc_length/2, -(battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_1")
+# assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((-(battery_holder_length_mm/2 - esc_length/2), -(battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_2")
+# assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector((-(battery_holder_length_mm/2 - esc_length/2), (battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_3")
+# assembled_drone.add(esc_holder, loc=cq.Location(cq.Vector(((battery_holder_length_mm/2 - esc_length/2), (battery_holder_width_mm + battery_holder_thickness_mm + esc_height + 2 * esc_holder_thickness)/2, -(drone_base_thickness_mm/2 + drone_base_battery_pillar_height_mm + battery_holder_height_mm/2 + esc_holder_thickness)))), color=cq.Color("yellow"), name="esc_holder_4")
 
-assembled_drone.add(switch_holder, color=cq.Color("red"), name="switch_holder")
+assembled_drone.add(switch_holder, color=cq.Color("red"), name="switchHolder")
+
+assembled_drone.add(pcb_holder, color="grey", name="pcbHolder")
+
+# assembled_drone.constrain("switchHolder@faces@<X", "pcbHolder@faces@>X", "Plane")
+assembled_drone.constrain("pcbHolder?pcbHolderFrontEdge", "switchHolder?switchHolderFrontEdge", "Axis", param=0)
+assembled_drone.constrain("pcbHolder?pcbHolderBottomEdge", "switchHolder?switchHolderBottomEdge", "Axis", param=0)
+assembled_drone.constrain("pcbHolder?pcbHolderTopRightVertex", "switchHolder?switchHolderTopRightVertex", "Point")
+assembled_drone.solve()
+
+debug_edges_switch = switch_holder.vertices(tag="switchHolderTopRightVertex")
+debug_edges_pcb = pcb_holder.vertices(tag="pcbHolderTopRightVertex")
+# debug_edges_switch = switch_holder.faces("<X")
+# debug_edges_pcb = pcb_holder.faces(">X")
+
+assembled_drone.add(debug_edges_switch, name="switchDebug")
+assembled_drone.add(debug_edges_pcb, name="pcbDebug")
 
 show_object(assembled_drone)
 # show_object(switch_holder)

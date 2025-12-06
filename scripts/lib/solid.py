@@ -1,25 +1,28 @@
 import cadquery as cq
 
-def create_solid_box(length, width, height, workplane="XY", origin=(0, 0, 0)):
+
+def create_solid_box(length, width, height, workplane="XY", origin=(0, 0, 0), centered=True):
   origin = cq.Vector(origin)
-  main_box = cq.Workplane(workplane).box(length, width, height).translate(origin)
-  # cavity_box = cq.Workplane(workplane).box(length - thickness, width - thickness, height - thickness)
-  # hollow_box = main_box.cut(cavity_box)
+  main_box = cq.Workplane(workplane).box(length, width, height, centered=centered).translate(origin)
   return main_box
 
 
-# def create_hollow_box_with_open_face(length, width, height, thickness, workplane="XY"):
-#   main_box = cq.Workplane(workplane).box(length + thickness*2, width + thickness*2, height + thickness*2)
-#   cavity_box = cq.Workplane(workplane).box(length, width, height)
-#   hollow_box = main_box.cut(cavity_box)
-#   hollow_box = hollow_box.faces(">Z").rect(length, width).cutBlind(-thickness)
-#   return hollow_box
+def create_solid_cylinder(radius, height, workplane="XY"):
+  main_cylinder = cq.Workplane(workplane).cylinder(height, radius)
+  return main_cylinder
 
 
-# def create_hollow_box_with_two_open_faces(length, width, height, thickness, workplane="XY"):
-#   main_box = cq.Workplane(workplane).box(length + thickness*2, width + thickness*2, height + thickness*2)
-#   cavity_box = cq.Workplane(workplane).box(length, width, height)
-#   hollow_box = main_box.cut(cavity_box)
-#   hollow_box = hollow_box.faces("<X").rect(2*thickness, width + thickness/2).cutThruAll()
-#   hollow_box = hollow_box.faces(">X").rect(2*thickness, width + thickness/2).cutThruAll()
-#   return hollow_box
+def create_solid_triangle(side1, side2, angle, workplane="XY"):
+  triangle = cq.Workplane(workplane)
+
+
+# assy = AssembledPart(y_assembled)
+# x_assembled = assy.clone_and_rotate(axis="Z", angle=90)
+# y_assembled.add(x_assembled, name="x_assembled")
+# for i in test_ass.objects.values():
+#   if (not i.name.startswith("y")):
+#     continue
+#   print(i.name)
+#   i.loc *= rotation_vector
+# x_assembled = y_assembled.toCompound().rotate(cq.Vector(0, 0, 0), cq.Vector(0, 0, 1), 90).translate(cq.Vector(0, 0, -(drone_width + error_margin/2)))
+# y_assembled = y_assembled.add(x_assembled, name="x_assembled", color="red")
