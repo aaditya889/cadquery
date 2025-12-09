@@ -11,9 +11,14 @@ from lib.parts import *
 
 
 pcb_plate_length = 90
-pcb_plate_width = 30
-pcb_plate_height = 15
-pcb_plate_thickness = 5
+pcb_plate_width = 60
+pcb_plate_height = 10
+pcb_plate_thickness = 2
+
+battery_holder_length = 90
+battery_holder_width = 30
+battery_holder_height = 20
+battery_holder_thickness = 2
 
 arm_length = (220 - pcb_plate_length)/2
 arm_width = 30
@@ -25,6 +30,8 @@ esc_holder_length = 40
 esc_holder_width = 30
 esc_holder_height = 10
 esc_holder_thickness = 2
+
+dampener_support_thickness = 3
 
 
 def get_arm_with_motor_holder(motor_holder_part, length=arm_length, width=arm_width, height=arm_thickness):
@@ -145,30 +152,38 @@ def get_motor_holder_with_X_base(thickness=motor_holder_thickness):
 
 
 def get_pcb_and_battery_holder():
-	# pcb_plate1 = cq.Workplane("XY").box(pcb_plate_length, pcb_plate_width, pcb_plate_height)
+	pcb_plate = cq.Workplane("XY").box(pcb_plate_length, pcb_plate_width, pcb_plate_height)
 	# pcb_plate2 = cq.Workplane("XY").box(pcb_plate_width, pcb_plate_length, pcb_plate_height)
-	# # pcb_plate = pcb_plate.faces(">Z").shell(pcb_plate_thickness)
-	# # pcb_plate.edges(">Y").tag("mateEdge")
+	pcb_plate = pcb_plate.faces(">Z").shell(pcb_plate_thickness)
+	pcb_plate.edges(">Y").tag("mateEdge")
+	pcb_plate.faces("<Z").tag("mate")
+
+	pcb_plate = pcb_plate.edges(">Z").rect(2, 4).extrude(10)
 	
-	# # battery_holder = cq.Workplane("XY").box(pcb_plate_length, pcb_plate_width, pcb_plate_height).faces(">Z").tag("mate").end()
-	# # battery_holder = battery_holder.faces("<Z").shell(pcb_plate_thickness)
-	# # battery_holder.edges(">Y").tag("mateEdge")
+	battery_holder = cq.Workplane("XY").box(battery_holder_length, battery_holder_width, battery_holder_height)
+	battery_holder.faces(">Z").tag("mate")
+	battery_holder = battery_holder.faces("<Z").shell(battery_holder_thickness)
+	battery_holder.edges(">Y").tag("mateEdge")
 
-	# assembled = cq.Assembly()
-	# assembled.add(pcb_plate1, name="pcbPlate1")
+	assembled = cq.Assembly()
+	assembled.add(pcb_plate, name="pcbPlate")
 	# assembled.add(pcb_plate2, name="pcbPlate2")
-	# # assembled.add(battery_holder, name="batteryHolder")
-	# # assembled.constrain("pcbPlate?mate", "batteryHolder?mate", "Plane")
-	# # assembled.constrain("pcbPlate?mateEdge", "batteryHolder?mateEdge", "Axis", param=0)
-	# # assembled.solve()
+	assembled.add(battery_holder, name="batteryHolder")
+	assembled.constrain("pcbPlate?mate", "batteryHolder?mate", "Plane")
+	assembled.constrain("pcbPlate?mateEdge", "batteryHolder?mateEdge", "Axis", param=0)
+	assembled.solve()
 
+	return assembled
+
+
+def get_X_frame_base():
 	cross_sketch = (
     cq.Sketch()
     .rect(pcb_plate_length, pcb_plate_width)
     .rect(pcb_plate_width, pcb_plate_length, mode='a')
     .clean()                                    # Cleans up unnecessary internal lines
 		.vertices(">X or <X or >Y or <Y")
-		.fillet(0.5)
+		.fillet(10)
 	)
 	assembled = (
     cq.Workplane("XY")
@@ -205,8 +220,116 @@ def get_pcb_and_battery_holder():
 	_a7.faces(">Y").tag("escMatePlane3").edges(">Z").tag("escMateEdge3")
 	_a8.faces("<Y").tag("escMatePlane4").edges(">Z").tag("escMateEdge4")
 
-	fused = fused.edges("|Z").fillet(pcb_plate_length)
-	# show_object([_a1.faces(">X").edges(">Z"), _a1])
+	fused = fused.edges("|Z").fillet(pcb_plate_length*4)
+	
+	fusedXYVs = fused.faces(">Z").vertices(">XY")
+	fusedXYV1 = fusedXYVs.item(0)
+	fusedXYV2 = fusedXYVs.item(1)
+	fusedXY1_vector1 = cq.Vector(fusedXYV1.objects[0].Center())
+	fusedXY1_vector2 = cq.Vector(fusedXYV2.objects[0].Center())
+	r1 = (fusedXY1_vector1 - fusedXY1_vector2).Length
+
+	fusedYXVs = fused.faces(">Z").vertices("<XY")
+	fusedYXV1 = fusedYXVs.item(0)
+	fusedYXV2 = fusedYXVs.item(1)
+	fusedYX1_vector1 = cq.Vector(fusedYXV1.objects[0].Center())
+	fusedYX1_vector2 = cq.Vector(fusedYXV2.objects[0].Center())
+	r2 = (fusedYX1_vector1 - fusedYX1_vector2).Length
+
+	fusedLYXVs = fused.faces(">Z").vertices("not (<XY or >XY or >X or <X or >Y or <Y)")
+
+	currLX = 0
+	currGY = 0
+	currGX = 0
+	currLY = 0
+	least_x_point = None
+	greatest_y_point = None
+	greatest_x_point = None
+	least_y_point = None
+	for i in range(fusedLYXVs.size()):
+		if fusedLYXVs.item(i).objects[0].X < currLX:
+			least_x_point = fusedLYXVs.item(i)
+			currLX = fusedLYXVs.item(i).objects[0].X
+		if fusedLYXVs.item(i).objects[0].Y > currGY:
+			greatest_y_point = fusedLYXVs.item(i)
+			currGY = fusedLYXVs.item(i).objects[0].Y
+
+		if fusedLYXVs.item(i).objects[0].X > currGX:
+			greatest_x_point = fusedLYXVs.item(i)
+			currGX = fusedLYXVs.item(i).objects[0].X
+		if fusedLYXVs.item(i).objects[0].Y < currLY:
+			least_y_point = fusedLYXVs.item(i)
+			currLY = fusedLYXVs.item(i).objects[0].Y
+
+	fusedLYXV1 = least_x_point
+	fusedLYXV2 = greatest_y_point
+	fusedLYXV12 = least_y_point 
+	fusedLYXV22 = greatest_x_point
+
+	fusedLYX1_vector1 = cq.Vector(fusedLYXV1.objects[0].Center())
+	fusedLYX1_vector2 = cq.Vector(fusedLYXV2.objects[0].Center())
+	fusedLYX12_vector1 = cq.Vector(fusedLYXV12.objects[0].Center())
+	fusedLYX22_vector2 = cq.Vector(fusedLYXV22.objects[0].Center())
+	r3 = (fusedLYX1_vector1 - fusedLYX1_vector2).Length
+	r4 = (fusedLYX12_vector1 - fusedLYX22_vector2).Length
+
+	fused = (fused.faces(">Z")
+					.pushPoints([fusedXY1_vector1]).radiusArc(fusedXY1_vector2, -r1/2).close()
+					.cutBlind(-(pcb_plate_height - dampener_support_thickness))
+					.pushPoints([(fusedXY1_vector1 + fusedXY1_vector2)/2 - cq.Vector(1, 1, 0)*r1/6.0])
+					.cboreHole(3, 4, pcb_plate_height/1.5)
+
+					.pushPoints([fusedYX1_vector1]).radiusArc(fusedYX1_vector2, r2/2).close()
+					.cutBlind(-(pcb_plate_height - dampener_support_thickness))
+					.pushPoints([(fusedYX1_vector1 + fusedYX1_vector2)/2 + cq.Vector(1, 1, 0)*r2/6.0])
+					.cboreHole(3, 4, pcb_plate_height/1.5)
+
+					.pushPoints([fusedLYX1_vector1]).radiusArc(fusedLYX1_vector2, -r3/2).close()
+					.cutBlind(-(pcb_plate_height - dampener_support_thickness))
+					.pushPoints([(fusedLYX1_vector1 + fusedLYX1_vector2)/2 + cq.Vector(1, -1, 0)*r3/6.0])
+					.cboreHole(3, 4, pcb_plate_height/1.5)
+					
+					.pushPoints([fusedLYX12_vector1]).radiusArc(fusedLYX22_vector2, r4/2).close()
+					.cutBlind(-(pcb_plate_height - dampener_support_thickness))
+					.pushPoints([(fusedLYX12_vector1 + fusedLYX22_vector2)/2 + cq.Vector(-1, 1, 0)*r4/6.0])
+					.cboreHole(3, 4, pcb_plate_height/1.5)
+					)
+
+
+	# fusedV2 = fused.faces(">Z").workplane().transformed(rotate=cq.Vector(0, 0, -45)).rect(pcb_plate_length, pcb_plate_width/2).vertices()
+	
+	# fused = fused.faces(">Z").workplane().vertices(tag="v1").extrude(-10)
+	# fused = fused.faces(">Z").workplane().vertices(fusedV2).circle(2).extrude(10)
+	# sketch1R = cq.Sketch().rect(pcb_plate_length, pcb_plate_width/2, angle=-45)
+
+	exporters.export(fusedXYV1, "export/fusedV1.stl")
+	# show_object([fusedV1])
+	# loc1 = fused.faces(">Z").vertices(">X").vertices("<Y").val().location()
+	# show_object(fused.faces(">Z").vertices(">X").vertices("<Y"))
+	# print(loc1.toTuple())
+	# fused = fused.faces(">Z").workplane(origin=cq.Location(loc1)).rect(2, 3).cutBlind(-2)
+
+	# _e1 = curved_faces.edges("|Z and <Y").vals()
+	# _e2 = curved_faces.edges("|Z and <X").vals()
+	# _e3 = curved_faces.edges("|Z and >Y").vals()
+	# _e4 = curved_faces.edges("|Z and >X").vals()
+	# positive_edge_list = []
+	# [show_object(cq.Workplane("XY").newObject(e).tag("hookCut1")) for e in _e1 if e.Center().x > 0]
+	# [e.tag("hookCut2") for e in _e2 if e.Center().y < 0]
+	# [e.tag("hookCut3") for e in _e3 if e.Center().x < 0]
+	# [e.tag("hookCut4") for e in _e4 if e.Center().y > 0]
+
+
+	# large_curves = [f for f in curved_faces if f.Geom().Radius() > 2.0]
+	# fused = (fused
+  #        .faces("not (|X or |Y or |Z)") # Select all curved faces
+  #        .faces(">X and >Y")            # Filter for just the Top-Right one
+  #        .workplane(offset=5) 
+  #        .center(0, 0)
+  #        .rect(5, 5)
+  #        .cutBlind(-5)
+  #        )
+
 
 	return fused
 
@@ -222,33 +345,16 @@ def get_esc_holder():
 
 	# if positive_edge_list:
 	# 		_c = positive_edge_list[0]
-	
 	return esc_holder
 
 
 def get_vertical_cross_section_arms():
-	# cross_section = cq.Sketch().spline([[0, 0], [-2, 2], [2, 2], [0, 0]]).close()
-	# beam = cq.Workplane("YZ").bezier([[0, 0], [-0.4, 0], [-4, 5], [4, 5], [0.4, 0], [0, 0]]).close().extrude(20)
-
-	# --- Dimensions ---
-	# arm_length = 100
-	# height = 30   # Y-axis (Vertical)
-	# width = 15    # X-axis (Thickness)
-
-	# --- Extrude ---
-	# beam = cq.Workplane("YZ").placeSketch(oval_sketch).extrude(arm_length)
-	# Alternative for organic shapes
-	# beam = cq.Workplane("YZ").spline(points).close().extrude(10)
-
-	# Calculate the height of the vertical web part
 	arm_len = arm_length
 	total_h = pcb_plate_height   # Total height of the T
 	flange_w = arm_width  # Width of the top bar
 	flange_t = arm_thickness   # Thickness of the top bar
 	web_t = arm_thickness      # Thickness of the vertical bar
 	web_h = total_h - flange_t
-		# --- 2. Define the Sketch ---
-	# We center the Web at (0,0) for symmetry, then place the Flange on top.
 	t_sketch = (
 			cq.Sketch()
 			# Draw the vertical Web first (centered at 0,0)
@@ -272,8 +378,6 @@ def get_vertical_cross_section_arms():
 
 	# --- 3. Extrude the Arm ---
 	arm = cq.Workplane("YZ").placeSketch(t_sketch).extrude(arm_len).edges("not >X").fillet(2)
-	# _a = arm.faces("<X").tag("matePlane")
-	# _b = arm.faces("<X").edges(">Z").tag("mateEdge")
 	return arm
 
 
@@ -335,14 +439,14 @@ def _attach_esc_with_constraints(drone: cq.Assembly):
 # show_object(get_arm_with_motor_holder(get_motor_holder_with_X_base()))
 drone = cq.Assembly()
 
-body = get_pcb_and_battery_holder()
+body = get_X_frame_base()
 drone.add(body, color=cq.Color("yellow"), name="body")
 
 _attach_arms_with_constraints(drone)
 # _attach_esc_with_constraints(drone)
 # show_object([get_arm_with_motor_holder(get_motor_holder_with_X_base())])
-show_object([drone])
+show_object([drone.toCompound(), get_pcb_and_battery_holder()])
 # show_object([get_vertical_cross_section_arms()])
 
-# exporters.export(motor_object["part"], "export/motor_holder.stl")
-# part.export("export/motor_holder.stl", "STL")
+exporters.export(drone.toCompound(), "export/drone_x.stl")
+# drone.export("export/drone_x.stl", "STL")
