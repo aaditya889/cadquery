@@ -49,7 +49,7 @@ y_assembled.add(stand_pillar1, color="red", name="pillar_1")
 y_assembled.add(stand_pillar2, color="green", name="pillar_2")
 # y_assembled.add(y_ball_bearing_cylinder, color="blue", name="ball")
 
-show_object(stand_pillar1)
+show_object(y_assembled)
 # y_assembled.export("export/testing_stand.stl", "STL")
 exporters.export(stand_pillar1, "export/stand_pillar.stl")
 

@@ -9,21 +9,21 @@ from lib.solid import *
 from lib.hollow import *
 from lib.parts import *
 
-drone_width = 250
+drone_width = 300
 drone_height = 200
 # base_part_height = 25
 error_margin = 0
 stand_part_width = 40
-stand_part_height = 150
+stand_part_height = 130
 # base_part_width = 7
-stand_part_thickness = 8
-ball_bearing_radius = 13.1
+stand_part_thickness = 7
+ball_bearing_radius = 13.5
 ball_bearing_thickness = 2
 ball_bearing_height = 5
 wing_length = 100
 wing_width = 30
-wing_pillar_height = 130
-wing_pillar_thickness = 10
+wing_pillar_height = 100
+wing_pillar_thickness = 5
 
 
 topmost_point = cq.Vector(0, 0, stand_part_height/2)
