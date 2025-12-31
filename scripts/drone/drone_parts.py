@@ -454,6 +454,6 @@ if __name__ == "__main__":
 	# show_object([get_arm_with_motor_holder(get_motor_holder_with_X_base())])
 	show_object([drone.toCompound(), get_pcb_and_battery_holder()])
 	# show_object([get_vertical_cross_section_arms()])
-
+	print(drone.toCompound().matrixOfInertia(drone.toCompound()))
 	exporters.export(drone.toCompound(), "export/drone_x.stl")
 	# drone.export("export/drone_x.stl", "STL")
