@@ -19,19 +19,19 @@ class InnerGimbalConnector(Component):
 
   def _build(self) -> cq.Workplane:
     bearing_center_z = self.length
-    sketch1 = rounded_rect(self.length, self.length, 0)
-    sketch = (
-      rounded_rect(self.length - self.connectorThickness, self.length - self.connectorThickness, 0)
+    outer_sketch = rounded_rect(self.length, self.length, 0)
+    inner_sketch = (
+      rounded_rect(self.connectorThickness, self.connectorThickness, 0)
     )
-    pillar = (
+    connector = (
         cq.Workplane("XY")
-        .placeSketch(sketch1)
+        .placeSketch(outer_sketch)
         .extrude(self.height)
         .faces("<Z")
-        .placeSketch(sketch)
+        .placeSketch(inner_sketch)
         .cutBlind(self.depth)
         .faces(">Z")
-        .placeSketch(sketch)
+        .placeSketch(inner_sketch)
         .cutBlind(-self.depth)
         .faces(">X")
         .workplane(centerOption="CenterOfBoundBox")
@@ -48,7 +48,7 @@ class InnerGimbalConnector(Component):
     
     fused = fuse_all( bearing_cup_r,
                     bearing_cup_l,
-                      pillar
+                      connector
                     )
     self.add_port("upper_connector", origin=( 0, 0, (self.height) - self.depth), normal=( 0, 0, -1))
     self.add_port("lower_connector", origin=( 0, 0, self.depth), normal=( 0, 0, 1))
@@ -72,11 +72,16 @@ class GimbalQuarterCurve(Component):
     sketch = (
       rounded_rect(self.length, self.length, 0)
     )
-    pillar = (
+    gimbal_hand = (
         cq.Workplane("XY")
         .placeSketch(sketch1)
         .revolve(self.arcDegrees, cq.Vector(self.radius, 0, 0), cq.Vector(self.radius, 1, 0))
     )
+
+    # print(f"Workplane for {self.name} >Y Face: {gimbal_hand.faces("<Y").plane}")
+    # print(f"Workplane for {self.name} <Y Face: {gimbal_hand.faces(">Y").plane}")
+    self.add_port("right_face", origin=gimbal_hand.faces(">X").workplane(centerOption="CenterOfMass").plane)
+    self.add_port("bottom_face", origin=gimbal_hand.faces("<Z").workplane(centerOption="CenterOfMass").plane)
     # self.add_port("bearing_mount_outer", origin=( self.length / 2.0, 0, bearing_center_z), normal=( 1, 0, 0))
     # self.add_port("bearing_mount_inner", origin=( -self.length / 2.0, 0, bearing_center_z), normal=( -1, 0, 0))
     # bearing_cup_r = BearingHousing(bearing="608", wall_thickness=3.0, clearance=0.2, name="__bearing1")
@@ -91,5 +96,5 @@ class GimbalQuarterCurve(Component):
     #                 )
     # self.add_port("upper_connector", origin=( 0, 0, (self.height) - depth), normal=( 0, 0, -1))
     # self.add_port("lower_connector", origin=( 0, 0, depth), normal=( 0, 0, 1))
-    return pillar
+    return gimbal_hand
 

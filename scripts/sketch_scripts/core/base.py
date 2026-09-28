@@ -53,16 +53,17 @@ class Component(ABC):
     def add_port(
         self,
         name: str,
-        origin: tuple = (0, 0, 0),
+        origin: cq.Plane | tuple = (0, 0, 0),
         normal: tuple | cq.Vector = (0, 0, 1),
         x_dir: tuple | cq.Vector | None = None,
     ) -> None:
         """Registers a named attachment port on the component."""
         from .ports import Port
         self.ports[name] = Port(name, origin=origin, normal=normal, x_dir=x_dir)
-        _wp = cq.Plane(origin=origin, normal=normal)
+        self.workplanes[name] = get_new_workplane(origin) if isinstance(origin, cq.Plane) else get_new_workplane(cq.Plane(origin=origin, normal=normal))
+
+        # print(f"New location for the faces for {self.name} {name}: {self.workplanes[name].plane.location.toTuple()}")
         # print(f"{self.name} origin for port {name}: {_wp.location.toTuple()}")
-        self.workplanes[name] = get_new_workplane(_wp)
 
     def port(self, name: str):
         """Retrieves a named attachment port."""
