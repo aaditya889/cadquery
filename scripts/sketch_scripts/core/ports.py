@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 import cadquery as cq
 from core import Component
-
+from cadMath import *
 
 class Port:
     """
@@ -62,7 +62,7 @@ def attach(
     child_port: str,
     to: Component,
     to_port: str,
-) -> tuple[cq.Workplane, dict[str, Port]]:
+) -> tuple[cq.Workplane, dict[str, Port], dict[str, cq.Workplane]]:
     """
     Snaps `child` onto `to` so that `child_port` aligns with `to_port`.
     
@@ -105,8 +105,13 @@ def attach(
     # print(f"{p_port.location.toTuple()} ||||| Final transform: {transform.toTuple()} AND new_wp: {mated_wp.plane.location.toTuple()}")
     # 5. Transform child's remaining ports into world coordinates
     mated_ports: dict[str, Port] = {}
-    if hasattr(child, "ports"):
-        for name, port_obj in child.ports.items():
-            mated_ports[name] = port_obj.transform(transform)
+    for name, port_obj in child.ports.items():
+        mated_ports[name] = port_obj.transform(transform)
 
-    return mated_wp, mated_ports
+    mated_wps: dict[str, cq.Workplane] = {}
+    for name, wp_obj in child.workplanes.items():
+        # print(f"Transforming ({child.name}: {name}) {wp_obj.plane.location.toTuple()} to {(wp_obj.plane.location * transform).toTuple()}")
+        mated_wps[name] = get_new_workplane(transform * wp_obj.plane.location)
+        # print(f"Done: {mated_wps[name].plane.location.toTuple()}")
+    return mated_wp, mated_ports, mated_wps
+

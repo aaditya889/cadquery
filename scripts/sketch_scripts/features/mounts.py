@@ -19,8 +19,9 @@ class BearingHousing(Component):
         clearance: float = 0.2,
         lip_thickness: float = 1.5,
         lip_inset: float = 1.0,
+        name = "bearingHouse"
     ) -> None:
-        super().__init__("bearingHouse")
+        super().__init__(name)
         spec = get_bearing(bearing)
         self.inner_dia = spec.inner_dia
         self.bearing_dia = spec.outer_dia

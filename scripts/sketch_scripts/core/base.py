@@ -15,7 +15,7 @@ import os
 import cadquery as cq
 from cadquery import exporters
 from .booleans import to_shape, to_workplane
-
+from cadMath import *
 
 class Component(ABC):
     """
@@ -29,6 +29,7 @@ class Component(ABC):
         self._cached_solid: cq.Workplane | None = None
         self.ports: dict[str, Any] = {}
         self.name = name
+        self.workplanes: dict[str, cq.Workplane] = {}
 
     @abstractmethod
     def _build(self) -> cq.Workplane:
@@ -52,13 +53,16 @@ class Component(ABC):
     def add_port(
         self,
         name: str,
-        origin: tuple | cq.Vector | cq.Location | cq.Plane = (0, 0, 0),
+        origin: tuple = (0, 0, 0),
         normal: tuple | cq.Vector = (0, 0, 1),
         x_dir: tuple | cq.Vector | None = None,
     ) -> None:
         """Registers a named attachment port on the component."""
         from .ports import Port
         self.ports[name] = Port(name, origin=origin, normal=normal, x_dir=x_dir)
+        _wp = cq.Plane(origin=origin, normal=normal)
+        # print(f"{self.name} origin for port {name}: {_wp.location.toTuple()}")
+        self.workplanes[name] = get_new_workplane(_wp)
 
     def port(self, name: str):
         """Retrieves a named attachment port."""
@@ -76,7 +80,7 @@ class Component(ABC):
             cup_left, _ = bearing.mate('mount_face', to=pillar_ports['bearing_mount_inner'])
         """
         from .ports import attach
-        self._cached_solid, self.ports = attach(self, child_port=my_port, to=to, to_port=to_port)
+        self._cached_solid, self.ports, self.workplanes = attach(self, child_port=my_port, to=to, to_port=to_port)
 
     def translate(self, vec: tuple | cq.Vector) -> cq.Workplane:
         """Returns the built solid translated by vec."""
