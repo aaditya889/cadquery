@@ -44,7 +44,7 @@ def show(*objects, names: list[str] | None = None, colors: list[tuple] | None = 
         show(assembly)
     """
     for i, obj in enumerate(objects):
-        name = names[i] if names and i < len(names) else f"part_{i}"
+        name = names[i] if names and i < len(names) else f"{obj.name}" if hasattr(obj, "name") else f"part_{i}"
         color = colors[i] if colors and i < len(colors) else DEFAULT_COLORS[i % len(DEFAULT_COLORS)]
 
         if isinstance(obj, cq.Assembly):

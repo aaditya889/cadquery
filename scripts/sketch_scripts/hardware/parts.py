@@ -80,8 +80,9 @@ class GimbalQuarterCurve(Component):
 
     # print(f"Workplane for {self.name} >Y Face: {gimbal_hand.faces("<Y").plane}")
     # print(f"Workplane for {self.name} <Y Face: {gimbal_hand.faces(">Y").plane}")
-    self.add_port("right_face", origin=gimbal_hand.faces(">X").workplane(centerOption="CenterOfMass").plane)
-    self.add_port("bottom_face", origin=gimbal_hand.faces("<Z").workplane(centerOption="CenterOfMass").plane)
+    right_face_origin = gimbal_hand.faces(">X").workplane(centerOption="CenterOfMass").plane.location.toTuple()[0]
+    self.add_port("right_face", origin=right_face_origin, normal=(1, 0, 0))
+    self.add_port("bottom_face", origin=(0, 0, 0), normal=(0, 0, -1))
     # self.add_port("bearing_mount_outer", origin=( self.length / 2.0, 0, bearing_center_z), normal=( 1, 0, 0))
     # self.add_port("bearing_mount_inner", origin=( -self.length / 2.0, 0, bearing_center_z), normal=( -1, 0, 0))
     # bearing_cup_r = BearingHousing(bearing="608", wall_thickness=3.0, clearance=0.2, name="__bearing1")

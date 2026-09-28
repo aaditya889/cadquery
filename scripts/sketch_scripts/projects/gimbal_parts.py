@@ -7,7 +7,9 @@ from features import BearingHousing
 import cadquery as cq
 
 g1 = InnerGimbalConnector(thickness=50.0, height=100.0, connectorThickness=30, connectorDepth=30, name="gConn1")
+g2 = InnerGimbalConnector(thickness=50.0, height=100.0, connectorThickness=30, connectorDepth=30, name="gConn2")
 q1 = GimbalQuarterCurve(thickness=30, radius=40, name="quarterConn1")
+q2 = GimbalQuarterCurve(thickness=30, radius=40, name="quarterConn2")
 # b1 = BearingHousing(bearing="608", wall_thickness=3.0, clearance=0.2, name="Bearing1")
 # b2 = BearingHousing(bearing="608", wall_thickness=3.0, clearance=0.2, name="Bearing2")
 
@@ -20,16 +22,13 @@ q1 = GimbalQuarterCurve(thickness=30, radius=40, name="quarterConn1")
 # _q = q1.workplanes["right_face"].pushPoints([(0, 0, 0)]).circle(1).extrude(20)
 # __q = q1.workplanes["bottom_face"].pushPoints([(0, 0, 0)]).circle(1).extrude(20)
 
-# g.mate("upper_connector", to=q, to_port="bottom_face")
+g1.mate("upper_connector", to=q1, to_port="right_face")
+q2.mate("bottom_face", to=g1, to_port="lower_connector")
 
 show(
-      # g,
+      g1,
       q1,
-      # b1,
-      #  b2,
-      # _,
-      #  __
-      # _q, 
-      # __q,
-      # _c,
+      # g2,
+      q2,
+      # _q, __q
     )

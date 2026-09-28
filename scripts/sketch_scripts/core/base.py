@@ -62,8 +62,8 @@ class Component(ABC):
         self.ports[name] = Port(name, origin=origin, normal=normal, x_dir=x_dir)
         self.workplanes[name] = get_new_workplane(origin) if isinstance(origin, cq.Plane) else get_new_workplane(cq.Plane(origin=origin, normal=normal))
 
-        # print(f"New location for the faces for {self.name} {name}: {self.workplanes[name].plane.location.toTuple()}")
-        # print(f"{self.name} origin for port {name}: {_wp.location.toTuple()}")
+        print(f"New location for the faces for {self.name} {name}: {self.workplanes[name].plane.location.toTuple()}")
+        # print(f"{self.name} origin for port {name}: {self.workplanes[name].plane.location.toTuple()}")
 
     def port(self, name: str):
         """Retrieves a named attachment port."""
