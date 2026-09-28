@@ -20,7 +20,7 @@ class BearingHousing(Component):
         lip_thickness: float = 1.5,
         lip_inset: float = 1.0,
     ) -> None:
-        super().__init__()
+        super().__init__("bearingHouse")
         spec = get_bearing(bearing)
         self.inner_dia = spec.inner_dia
         self.bearing_dia = spec.outer_dia
@@ -29,6 +29,7 @@ class BearingHousing(Component):
         self.clearance = clearance
         self.lip_thickness = lip_thickness
         self.lip_inset = lip_inset
+        self.build()
 
     @property
     def outer_dia(self) -> float:
@@ -55,7 +56,7 @@ class BearingHousing(Component):
             .hole(shaft_through_dia)
         )
         
-        # Register attachment ports
+        # Register attachtop_facement ports
         self.add_port("center", origin=(0, 0, 0), normal=(0, 0, 1))
         self.add_port("top_face", origin=(0, 0, self.total_height / 2.0), normal=(0, 0, 1))
         self.add_port("mount_face", origin=(0, 0, -self.total_height / 2.0), normal=(0, 0, -1))

@@ -24,10 +24,11 @@ class Component(ABC):
     Subclasses should define their parameters in __init__ / dataclass
     and implement the `_build()` method.
     """
-
-    def __init__(self) -> None:
+    name = ""
+    def __init__(self, name: str = "") -> None:
         self._cached_solid: cq.Workplane | None = None
         self.ports: dict[str, Any] = {}
+        self.name = name
 
     @abstractmethod
     def _build(self) -> cq.Workplane:
@@ -37,12 +38,12 @@ class Component(ABC):
     def build(self, force_rebuild: bool = False) -> cq.Workplane:
         """Returns the constructed solid, using a cached version if available."""
         if self._cached_solid is None or force_rebuild:
-            self._cached_solid = self._build()
+          self._cached_solid = self._build()
         return self._cached_solid
 
     def val(self) -> cq.Shape:
         """Returns the underlying OpenCASCADE Shape."""
-        return self.build().val()
+        return self.build().val() # type: ignore
 
     def bounding_box(self) -> cq.BoundBox:
         """Returns the 3D bounding box of the component."""
@@ -62,12 +63,11 @@ class Component(ABC):
     def port(self, name: str):
         """Retrieves a named attachment port."""
         # Ensure model is built so ports are registered
-        self.build()
         if name not in self.ports:
             raise KeyError(f"Port '{name}' not found on {self.__class__.__name__}. Available ports: {list(self.ports.keys())}")
         return self.ports[name]
 
-    def mate(self, my_port: str, to: Component, to_port: str | Any | None = None) -> None:
+    def mate(self, my_port: str, to: Component, to_port: str) -> None:
         """
         Snaps this component onto another part so that `my_port` aligns with `to_port`.
         
@@ -82,11 +82,11 @@ class Component(ABC):
         """Returns the built solid translated by vec."""
         if isinstance(vec, tuple):
             vec = cq.Vector(*vec)
-        return self.build().translate(vec)
+        return self._cached_solid.translate(vec)
 
     def rotate(self, axis_start: tuple, axis_end: tuple, angle: float) -> cq.Workplane:
         """Returns the built solid rotated around an axis."""
-        return self.build().rotate(axis_start, axis_end, angle)
+        return self._cached_solid.rotate(axis_start, axis_end, angle)
 
     def export(self, filepath: str, export_type: str = "STL") -> str:
         """
@@ -97,11 +97,11 @@ class Component(ABC):
         if dir_name:
             os.makedirs(dir_name, exist_ok=True)
             
-        solid = self.build()
+        solid = self._cached_solid
         if export_type.upper() == "STL":
             exporters.export(solid, filepath)
         elif export_type.upper() in ["STEP", "STP"]:
-            exporters.export(solid.val(), filepath, exporters.ExportTypes.STEP)
+            exporters.export(solid.val(), filepath, exporters.ExportTypes.STEP) # type: ignore
         else:
             exporters.export(solid, filepath)
             

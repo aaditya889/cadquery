@@ -8,6 +8,7 @@ named attachment points (Ports) and snap together automatically via coordinate t
 from __future__ import annotations
 from typing import Any
 import cadquery as cq
+from core import Component
 
 
 class Port:
@@ -46,7 +47,7 @@ class Port:
     @property
     def origin(self) -> cq.Vector:
         """Returns the 3D position vector of the port."""
-        return self.location.toTuple()[0]
+        return self.location.toTuple()[0] # type: ignore
 
     def transform(self, parent_transform: cq.Location) -> Port:
         """Returns a new Port transformed by parent_transform."""
@@ -57,10 +58,10 @@ class Port:
 
 
 def attach(
-    child,
-    child_port: Port | str,
-    to: Any,
-    to_port: Port | str | None = None,
+    child: Component,
+    child_port: str,
+    to: Component,
+    to_port: str,
 ) -> tuple[cq.Workplane, dict[str, Port]]:
     """
     Snaps `child` onto `to` so that `child_port` aligns with `to_port`.
@@ -97,11 +98,11 @@ def attach(
 
     # 3. Compute mating transformation: T = L_target * L_child^(-1)
     transform = p_port.location * c_port.location.inverse
-    
     # 4. Transform geometry
-    shape = child.val() if hasattr(child, "val") else (child.build().val() if hasattr(child, "build") else child)
-    mated_wp = cq.Workplane(obj=shape.moved(transform))
-
+    shape = child.build().val()
+    # print(f"Transforming {child.name} from {child._cached_solid.plane.location.toTuple()} to: ")
+    mated_wp = cq.Workplane(obj=shape.moved(transform)) # type: ignore
+    # print(f"{p_port.location.toTuple()} ||||| Final transform: {transform.toTuple()} AND new_wp: {mated_wp.plane.location.toTuple()}")
     # 5. Transform child's remaining ports into world coordinates
     mated_ports: dict[str, Port] = {}
     if hasattr(child, "ports"):
