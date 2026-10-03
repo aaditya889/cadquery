@@ -16,6 +16,7 @@ import cadquery as cq
 from cadquery import exporters
 from .booleans import to_shape, to_workplane
 from cadMath import *
+from utils.debug_print import *
 
 class Component(ABC):
     """
@@ -59,10 +60,20 @@ class Component(ABC):
     ) -> None:
         """Registers a named attachment port on the component."""
         from .ports import Port
+        
         self.ports[name] = Port(name, origin=origin, normal=normal, x_dir=x_dir)
-        self.workplanes[name] = get_new_workplane(origin) if isinstance(origin, cq.Plane) else get_new_workplane(cq.Plane(origin=origin, normal=normal))
+        # print(f"Adding a new port for origin: {origin} and normal: {normal}: {cq.Plane(origin=origin, normal=normal)}")
+        # print(f"origin is of class: {type(origin)}")
+        if (isinstance(origin, cq.Plane)):
+            # print(f"Sending {origin.location.toTuple()} to the get_new_workplane")
+            self.workplanes[name] = get_new_workplane(origin)
+        else:
+            # print(f"Sending {cq.Plane(origin=origin, normal=normal).location.toTuple()} to the get_new_workplane")
+            self.workplanes[name] = get_new_workplane(cq.Plane(origin=origin, normal=normal))
+        # self.workplanes[name] = get_new_workplane(origin) if isinstance(origin, cq.Plane) else get_new_workplane(cq.Plane(origin=origin, normal=normal))
 
-        print(f"New location for the faces for {self.name} {name}: {self.workplanes[name].plane.location.toTuple()}")
+
+        # print(f"OLD LOCATION for the faces for {self.name} {name}: {self.workplanes[name].plane.location.toTuple()}")
         # print(f"{self.name} origin for port {name}: {self.workplanes[name].plane.location.toTuple()}")
 
     def port(self, name: str):
@@ -72,7 +83,14 @@ class Component(ABC):
             raise KeyError(f"Port '{name}' not found on {self.__class__.__name__}. Available ports: {list(self.ports.keys())}")
         return self.ports[name]
 
-    def mate(self, my_port: str, to: Component, to_port: str) -> None:
+    def remove_port(self, name: str):
+        if name not in self.ports:
+            raise KeyError(f"Port '{name}' not found on {self.__class__.__name__}. Available ports: {list(self.ports.keys())}")
+        
+        del self.ports[name]
+        print(f"Deleted {name}: {self.ports[name]}")
+
+    def mate(self, my_port: str, to: Component, to_port: str, invert: bool = False) -> None:
         """
         Snaps this component onto another part so that `my_port` aligns with `to_port`.
         
@@ -81,7 +99,8 @@ class Component(ABC):
             cup_left, _ = bearing.mate('mount_face', to=pillar_ports['bearing_mount_inner'])
         """
         from .ports import attach
-        self._cached_solid, self.ports, self.workplanes = attach(self, child_port=my_port, to=to, to_port=to_port)
+        d_print(self.name, "gConn1", f"Mating {self.name}:{my_port} to {to.name}:{to_port}")
+        self._cached_solid, self.ports, self.workplanes = attach(self, child_port=my_port, to=to, to_port=to_port, invert=invert)
 
     def translate(self, vec: tuple | cq.Vector) -> cq.Workplane:
         """Returns the built solid translated by vec."""

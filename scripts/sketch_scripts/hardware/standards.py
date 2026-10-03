@@ -68,6 +68,7 @@ BEARINGS: dict[str, BearingSpec] = {
     "625": BearingSpec(inner_dia=5.0, outer_dia=16.0, thickness=5.0),      # V-slot roller bearing
     "688": BearingSpec(inner_dia=8.0, outer_dia=16.0, thickness=5.0),
     "6800": BearingSpec(inner_dia=10.0, outer_dia=19.0, thickness=5.0),
+    "6000": BearingSpec(inner_dia=10.0, outer_dia=26.0, thickness=8.0),
     "MR128": BearingSpec(inner_dia=8.0, outer_dia=12.0, thickness=3.5),    # Drone compact bearing
     "MR105": BearingSpec(inner_dia=5.0, outer_dia=10.0, thickness=4.0),
 }
