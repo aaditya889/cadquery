@@ -11,6 +11,7 @@ from .profiles import (
     u_channel,
     l_profile,
     i_beam,
+    circle_sketch,
 )
 from .patterns import (
     bolt_circle_pattern,
@@ -30,4 +31,5 @@ __all__ = [
     "bolt_circle_pattern",
     "slotted_grille",
     "hex_grid_pattern",
+    "circle_sketch",
 ]

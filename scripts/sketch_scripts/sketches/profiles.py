@@ -20,6 +20,11 @@ def rounded_rect(length: float, width: float, radius: float) -> cq.Sketch:
         sketch = sketch.vertices().fillet(radius)
     return sketch
 
+def circle_sketch(radius: float) -> cq.Sketch:
+    
+    sketch = cq.Sketch().circle(radius)
+    return sketch
+
 
 def chamfered_rect(length: float, width: float, chamfer: float) -> cq.Sketch:
     """Creates a 2D rectangle with chamfered corners."""
