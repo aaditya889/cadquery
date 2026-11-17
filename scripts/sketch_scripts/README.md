@@ -10,25 +10,35 @@ A modular, scalable, and crash-proof CAD library built with **CadQuery 2.0 Sketc
 sketch_scripts/
 │
 ├── core/                        # Engine & fundamental primitives
-│   ├── base.py                  # Component ABC with caching, ports, export
-│   ├── booleans.py              # fuse_all(), find_junction_edges(), duplicate()
+│   ├── base.py                  # Component ABC: cached local build, local ports, one `location`, world(), export
+│   ├── ports.py                 # Port (immutable frame stored as cq.Location), attach() / mating
+│   ├── booleans.py              # to_shape(), fuse_all(), place_on(), find_junction_edges(), duplicate()
 │   └── display.py               # Crash-proof show() for cq-server & OCP
 │
 ├── sketches/                    # Reusable 2D geometric sketches
 │   ├── profiles.py              # rounded_rect, slotted_hole, u_channel, etc.
 │   └── patterns.py              # hex_grid_pattern, bolt_circle_pattern, etc.
 │
-├── hardware/                    # Standard hardware tables & tolerances
-│   └── standards.py             # ISO Metric fasteners (M2-M6), Bearings (608, 624, etc.)
+├── hardware/                    # Standard hardware tables & project parts
+│   ├── standards.py             # ISO Metric fasteners (M2-M6), Bearings (608, 624, etc.)
+│   └── parts.py                 # Gimbal and stand parts (InnerGimbalConnector, GimbalQuarterCurve, DroneStand, ...)
 │
 ├── features/                    # Parametric 3D mechanical components
 │   ├── mounts.py                # BearingHousing, ScrewBoss
 │   └── plates.py                # MountingPlate
 │
-├── projects/                    # Full assemblies & product designs
-│   └── drone_gimbal.py          # Parametric drone gimbal test stand
+├── operations/slots.py          # create_rectangular_slot(): cuts slots, returns their planes (register them as ports)
+├── cadMath/                     # transform_vector() (Euler rotation helper)
+├── utils/debug_print.py         # d_print() keyed debug output
 │
-└── export/                      # Exported STL / STEP files
+├── projects/                    # Full assemblies & product designs
+│   ├── drone_gimbal.py          # Parametric drone gimbal test stand
+│   ├── gimbal_parts.py          # Gimbal / tether parts and exports
+│   └── prop_dyno.py             # Propeller dynamometer (frame, boom, flexure head, guard)
+│
+├── tests/test_core.py           # Port / mate / rebuild / feature checks: python3 tests/test_core.py
+│
+└── docs/core-bugs-and-fixes.md  # Review of the port engine and the fixes applied
 ```
 
 ---
@@ -71,6 +81,14 @@ show(final_part)
 3. **Automated Seam Filleting**: Use `find_junction_edges(fused_model, part_a, part_b).fillet(r)` to smooth transitions where components meet.
 4. **Standard Hardware Specs**: Never hardcode bearing/screw hole sizes. Use `get_fastener("M3")` or `get_bearing("608")` to guarantee correct fit and 3D printing clearances.
 5. **Universal Preview**: Always use `show(part1, part2, ...)` — it handles Workplanes, Compounds, Solids, and Assemblies without tessellation crashes.
+6. **Ports are local, placement is one Location**: register ports with `add_port()` inside `_build()`, in the part's own
+   coordinates. `part.mate(my_port, to=other, to_port=...)` only sets `part.location`; nothing is moved in place, so mates
+   can be repeated and rebuilds keep solid and ports together. `part.world()` / `part.port(name)` give placed geometry
+   and frames; `part.build()` / `part.local_port(name)` give local ones. Inside a parent's `_build`, mate children to
+   `self.local_port(...)`. `invert=True` mates face to face (normals opposed, in-plane x direction kept).
+7. **Call `self.build()`, never `self._build()`**, from `__init__`.
+
+Run the checks after touching `core/`: `python3 tests/test_core.py` (from `sketch_scripts/`).
 
 ---
 

@@ -1,6 +1,6 @@
 
 import cadquery as cq
-from core import Component, fuse_all, show
+from core import Component, fuse_all, show, place_on
 from sketches import *
 from features import BearingHousing
 from hardware.standards import BEARINGS
@@ -19,7 +19,7 @@ class InnerGimbalConnector(Component):
     self.connectorWidth = connectorWidth
     self.height = height
     self.bearing = bearing
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     bearing_center_z = self.height/2
@@ -47,8 +47,8 @@ class InnerGimbalConnector(Component):
     bearing_cup_r = BearingHousing(bearing=self.bearing, wall_thickness=3.0, clearance=0.2, name="__bearing1")
     bearing_cup_l = BearingHousing(bearing=self.bearing, wall_thickness=3.0, clearance=0.2, name="__bearing2")
 
-    bearing_cup_r.mate("top_face", to=self, to_port="bearing_mount_outer")
-    bearing_cup_l.mate("top_face", to=self, to_port="bearing_mount_inner")
+    bearing_cup_r.mate("top_face", to=self.local_port("bearing_mount_outer"))
+    bearing_cup_l.mate("top_face", to=self.local_port("bearing_mount_inner"))
     
     fused = fuse_all( bearing_cup_r,
                     bearing_cup_l,
@@ -71,7 +71,7 @@ class GimbalQuarterCurve(Component):
     self.connector_depth = connectorDepth
     self.connectorLength = connectorLength
     self.connectorWidth = connectorWidth
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     curved_sketch = rounded_rect(self.length, self.width, 0)
@@ -118,7 +118,7 @@ class YawQuarterCurve(Component):
     self.connectorLength = connectorLength
     self.connectorWidth = connectorWidth
     self.bearing = bearing
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     curved_sketch = rounded_rect(self.length, self.width, 0)
@@ -142,8 +142,7 @@ class YawQuarterCurve(Component):
       )
 
     pivot_connector = InnerGimbalConnector(length=self.length, width=self.width, height=self.connector_depth, connectorLength=self.connectorLength, connectorWidth=self.connectorWidth, connectorDepth=0.01, bearing="6000",name="yawBearing")
-    pivot_connector.build()
-    pivot_connector = pivot_connector._cached_solid.rotateAboutCenter(cq.Vector(0, 1, 0), 90) # type: ignore
+    pivot_connector = pivot_connector.build().rotateAboutCenter(cq.Vector(0, 1, 0), 90)
     
     # print(gimbal_hand.faces(">X").workplane(centerOption="CenterOfMass").val().Center())
     pivot_connector = pivot_connector.translate(gimbal_hand.faces(">X").val().Center() - cq.Vector(-self.connector_depth/2 + 1, 0, self.connectorLength/2)) # type: ignore
@@ -168,7 +167,7 @@ class YawQuarterCurveExtender(Component):
     self.connector_depth = connectorDepth
     self.connectorLength = connectorLength
     self.connectorWidth = connectorWidth
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     curved_sketch = rounded_rect(self.length, self.width, 0)
@@ -203,7 +202,7 @@ class GimbalStand(Component):
     self.height = height
     self.rodConnectorDepth = rodConnectorDepth
     self.rodConnectorRadius = rodConnectorRadius
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     stand_sketch = rounded_rect(self.length, self.width, 5)
@@ -245,6 +244,94 @@ class GimbalStand(Component):
     return gimbal_stand
 
 
+class TetherColumn(Component):
+  padding = 0
+  pad_height = 5
+  pad_length = 14
+  pad_width = 10.5
+  def __init__(self, length: float, width: float, height: float, rodConnectorLength: float, rodConnectorRadius, eyeRadius: float, eyeTubeRadius: float, eyeSink: float, name="tetherStand") -> None:
+    super().__init__(name)
+    self.length = length
+    self.width = width
+    self.height = height
+    self.rodConnectorLength = rodConnectorLength
+    self.rodConnectorRadius = rodConnectorRadius
+    self.eyeRadius = eyeRadius
+    self.eyeTubeRadius = eyeTubeRadius
+    self.eyeSink = eyeSink
+    self.build()
+
+  def _build(self) -> cq.Workplane:
+    column_plate_sketch = rounded_rect(self.length, self.width, 5)
+    # upright eye loop in the XZ plane, bottom on Z=0
+    connector_ring = cq.Solid.makeTorus(
+      self.eyeRadius, self.eyeTubeRadius,
+      pnt=cq.Vector(0, 0, self.eyeRadius + self.eyeTubeRadius),
+      dir=cq.Vector(0, 1, 0),
+    )
+    column_plate = (
+      cq.Workplane("XY")
+      .placeSketch(column_plate_sketch)
+      .extrude(self.height)
+    )
+    column_plate_plane_1 = column_plate.faces(">Z").workplane().plane
+    # column_plate = (
+    #   column_plate.copyWorkplane(cq.Workplane(column_plate_plane_1))
+    #   .circle(self.rodConnectorRadius)
+    #   .extrude(self.rodConnectorLength)
+    #   )
+    # column_plate_plane_2 = column_plate.faces(">Z").workplane().plane
+    # column_plate = place_on(column_plate, connector_ring, column_plate_plane_2, sink=self.eyeSink)
+    column_plate = (
+      column_plate.copyWorkplane(cq.Workplane(column_plate_plane_1))
+      .pushPoints([(0, -(self.width - self.pad_width)/2 + self.padding, 0), (0, (self.width - self.pad_width)/2 - self.padding, 0)])
+      .placeSketch(cq.Sketch().rect(self.pad_length, self.pad_width).vertices().fillet(1))
+      .extrude(self.pad_height)
+    )
+    column_plate = (
+      column_plate.copyWorkplane(cq.Workplane(column_plate_plane_1))
+      .pushPoints([(-(self.length - self.pad_width)/2 + self.padding,  0, 0), ((self.length - self.pad_width)/2 - self.padding,  0, 0)])
+      .placeSketch(cq.Sketch().rect(self.pad_width, self.pad_length).vertices().fillet(1))
+      .extrude(self.pad_height)
+      )
+    # self.plane = gimbal_stand_plane_1
+
+    return column_plate
+
+
+class TetherPlate(Component):
+  
+  def __init__(self, length: float, width: float, height: float, eyeRadius: float, eyeTubeRadius: float, eyeSink: float, name="tetherPlate") -> None:
+    super().__init__(name)
+    self.length = length
+    self.width = width
+    self.height = height
+    self.eyeRadius = eyeRadius
+    self.eyeTubeRadius = eyeTubeRadius
+    self.eyeSink = eyeSink
+    self.build()
+
+  def _build(self) -> cq.Workplane:
+    column_plate_sketch = rounded_rect(self.length, self.width, 5)
+    # upright eye loop in the XZ plane, bottom on Z=0
+    connector_ring = cq.Solid.makeTorus(
+      self.eyeRadius, self.eyeTubeRadius,
+      pnt=cq.Vector(0, 0, self.eyeRadius + self.eyeTubeRadius),
+      dir=cq.Vector(0, 1, 0),
+    )
+    column_plate = (
+      cq.Workplane("XY")
+      .placeSketch(column_plate_sketch)
+      .extrude(self.height)
+    )
+    column_plate_plane_1 = column_plate.faces(">Z").workplane().plane
+    column_plate = place_on(column_plate, connector_ring, column_plate_plane_1, sink=self.eyeSink)
+
+    # self.plane = gimbal_stand_plane_1
+
+    return column_plate
+
+
 class DroneStand(Component):
 
   def __init__(self, length: float, width: float, height: float, radius: float, connectorLength: float, connectorWidth: float, connectorDepth: float, droneLength: float, droneWidth: float, droneDepth: float, name="droneStand") -> None:
@@ -259,7 +346,7 @@ class DroneStand(Component):
     self.droneLength = droneLength
     self.droneWidth = droneWidth
     self.droneDepth = droneDepth
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     drone_stand_sketch = rounded_rect(self.length, self.width, self.radius)
@@ -331,7 +418,8 @@ class DroneStand(Component):
                         .circle(5)
                         .cutBlind(self.connectorDepth)
                       )
-    # drone_stand, self.tagged_planes = create_rectangular_slot(drone_stand, slot_properties, ["<X", ">X", "<Y", ">Y"], slotName="droneStandSlots")
+    # drone_stand, slot_planes = create_rectangular_slot(drone_stand, slot_properties, ["<X", ">X", "<Y", ">Y"], slotName="droneStandSlots")
+    # self.add_ports_from_planes(slot_planes)   # ports such as "droneStandSlots.<X.floor", placed with the stand
 
     # print(type(drone_stand))
     return drone_stand
@@ -350,7 +438,7 @@ class YawQuarterCurveExtenderLong(Component):
     self.connector_depth = connectorDepth
     self.connectorLength = connectorLength
     self.connectorWidth = connectorWidth
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     curved_sketch = rounded_rect(self.length, self.width, 0)
@@ -387,7 +475,7 @@ class GimbalYawHub(Component):
     self.connectorThickness = connectorThickness
     self.height = height
     self.bearing = bearing
-    self._build()
+    self.build()
 
   def _build(self) -> cq.Workplane:
     bearing_center_z = self.height/2
@@ -415,8 +503,8 @@ class GimbalYawHub(Component):
     bearing_cup_r = BearingHousing(bearing=self.bearing, wall_thickness=3.0, clearance=0.2, name="__bearing1")
     bearing_cup_l = BearingHousing(bearing=self.bearing, wall_thickness=3.0, clearance=0.2, name="__bearing2")
 
-    bearing_cup_r.mate("top_face", to=self, to_port="bearing_mount_outer")
-    bearing_cup_l.mate("top_face", to=self, to_port="bearing_mount_inner")
+    bearing_cup_r.mate("top_face", to=self.local_port("bearing_mount_outer"))
+    bearing_cup_l.mate("top_face", to=self.local_port("bearing_mount_inner"))
     
     fused = fuse_all( bearing_cup_r,
                     bearing_cup_l,

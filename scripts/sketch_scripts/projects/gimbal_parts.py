@@ -27,6 +27,8 @@ yaw_gimbal_extender_long = YawQuarterCurveExtenderLong(length=yaw_connector_meas
 
 drone_stand = DroneStand(length=160, width=160, height=15, connectorLength=15, connectorWidth=30, connectorDepth=40, radius=10, droneLength = 140, droneWidth=82, droneDepth = 2, name="droneStand")
 gimbal_stand = GimbalStand(length=130, width=130, height=30, rodConnectorDepth=60, rodConnectorRadius=20, name="gimbalStand")
+column_stand = TetherColumn(length=91, width=91, height=2, rodConnectorLength=100, rodConnectorRadius=10, eyeRadius= 7, eyeTubeRadius= 3, eyeSink=6, name="tetherStand")
+column_stand_plate = TetherPlate(length=40, width=40, height=4, eyeRadius= 9, eyeTubeRadius= 5, eyeSink=4, name="tetherPlate")
 
 # quarter_arm_test = GimbalQuarterCurve(length=40, width=40, radius=200, connectorDepth=40, connectorLength=40, connectorWidth=40, name="quarterArmTest")
 # b1 = BearingHousing(bearing="608", wall_thickness=3.0, clearance=0.2, name="Bearing1")
@@ -73,7 +75,9 @@ show(
       # yaw_gimbal_extender_long,
       # yaw_connector,
       # yaw_quarter_arm,
-      drone_stand,
+      # drone_stand,
+      column_stand,
+      column_stand_plate,
       # *slot_faces,
       #  drone_stand.build().faces(">Z"),
       # gimbal_stand,
@@ -81,7 +85,8 @@ show(
     )
 
 os.makedirs("export/drone_gimbal", exist_ok=True)
-cq.exporters.export(fuse_all(drone_stand), "export/drone_gimbal/drone_stand.stl")
+cq.exporters.export(fuse_all(column_stand_plate), "export/drone_gimbal/column_stand_plate.stl")
+cq.exporters.export(fuse_all(column_stand), "export/drone_gimbal/column_stand_pad.stl")
 # cq.exporters.export(fuse_all(q3), "export/drone_gimbal/yaw_quarter_arm.stl")
 
 print("✅ Tag-based assembly compiled and exported successfully to " \

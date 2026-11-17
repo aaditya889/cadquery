@@ -49,8 +49,8 @@ def show(*objects, names: list[str] | None = None, colors: list[tuple] | None = 
 
         if isinstance(obj, cq.Assembly):
             _show_assembly_nodes(obj)
-        elif hasattr(obj, "build"):  # ParametricComponent instance
-            _show_single_object(obj.build(), name=name, color=color)
+        elif hasattr(obj, "world"):  # Component instance, at its placement
+            _show_single_object(obj.world(), name=name, color=color)
         else:
             _show_single_object(obj, name=name, color=color)
 

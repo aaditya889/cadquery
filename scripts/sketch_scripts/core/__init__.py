@@ -10,6 +10,7 @@ from .booleans import (
     to_workplane,
     duplicate,
     fuse_all,
+    place_on,
     find_junction_edges,
     CustomSelector,
 )
@@ -23,6 +24,7 @@ __all__ = [
     "to_workplane",
     "duplicate",
     "fuse_all",
+    "place_on",
     "find_junction_edges",
     "CustomSelector",
 ]

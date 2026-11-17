@@ -60,6 +60,32 @@ FASTENERS: dict[str, FastenerSpec] = {
     ),
 }
 
+@dataclass(frozen=True)
+class MachinedFastener:
+    """Metal parts: ISO 273 medium clearance, ISO 261 coarse-thread tap drill, ISO 4762 socket head, DIN 974-1 counterbore."""
+    d: float
+    pitch: float
+    clearance: float
+    tap_drill: float
+    head_d: float
+    head_h: float
+    cbore_d: float
+    nut_af: float            # ISO 4032 hex nut, across flats
+    nut_h: float
+
+
+MACHINED: dict[str, MachinedFastener] = {
+    "M3": MachinedFastener(3, 0.5, 3.4, 2.5, 5.5, 3, 6.5, 5.5, 2.4),
+    "M4": MachinedFastener(4, 0.7, 4.5, 3.3, 7.0, 4, 8.0, 7.0, 3.2),
+    "M5": MachinedFastener(5, 0.8, 5.5, 4.2, 8.5, 5, 10.0, 8.0, 4.7),
+    "M6": MachinedFastener(6, 1.0, 6.6, 5.0, 10.0, 6, 11.0, 10.0, 5.2),
+    "M8": MachinedFastener(8, 1.25, 9.0, 6.8, 13.0, 8, 15.0, 13.0, 6.8),
+    "M10": MachinedFastener(10, 1.5, 11.0, 8.5, 16.0, 10, 18.0, 16.0, 8.4),
+    "M12": MachinedFastener(12, 1.75, 13.5, 10.2, 18.0, 12, 20.0, 18.0, 10.8),
+    "M16": MachinedFastener(16, 2.0, 17.5, 14.0, 24.0, 16, 26.0, 24.0, 14.8),
+}
+
+
 # Standard Deep Groove Ball Bearings
 BEARINGS: dict[str, BearingSpec] = {
     "608": BearingSpec(inner_dia=8.0, outer_dia=22.0, thickness=7.0),      # Standard skate / large gimbal

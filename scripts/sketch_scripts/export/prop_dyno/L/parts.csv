@@ -1,0 +1,39 @@
+part,name,qty,material,process,source,stock,group,mass_kg_each,notes
+W1-01,Side rail,2,S275 (IS 2062 E250),"saw cut square, weld",outsource,RHS 80×80×4 × 2500,W1 base frame,23.864,
+W1-02,Cross member,3,S275 (IS 2062 E250),"saw cut square, weld",outsource,RHS 80×80×4 × 1120,W1 base frame,10.691,
+W1-03,Foot plate,8,S275 (IS 2062 E250),"laser cut, drill, tap M16, weld",outsource,plate 12 × 120 × 120,W1 base frame,1.342,
+W1-04,Post,2,S275 (IS 2062 E250),"saw cut, drill index holes on a jig, weld",outsource,RHS 80×80×4 × 1630,W1 base frame,15.418,"index holes on 50 mm pitch, ±0.2 mm cumulative"
+W1-05,Post cap,2,S275 (IS 2062 E250),"laser cut, weld",outsource,plate 5 × 80 × 80,W1 base frame,0.251,
+W1-06,Post gusset,2,S275 (IS 2062 E250),"laser cut, weld",outsource,plate 8 × 150 × 150,W1 base frame,0.707,
+W1-07,Post top tie,1,S275 (IS 2062 E250),"saw cut, weld",outsource,RHS 60×60×4 × 120,W1 base frame,0.844,
+W1-08,Diagonal,2,S275 (IS 2062 E250),"saw cut both ends at 50.1° (on the CAD), weld",outsource,RHS 60×60×4 × 2090,W1 base frame,14.481,end cuts as modelled; fit-up gap ≤ 2 mm before welding
+B-01,"Levelling foot M16 × 100, Ø80 swivel base, NBR pad, ≥ 5 kN",8,bought,—,buy,catalogue part,feet,1.1,
+A1-01,Saddle front plate,1,S275 (IS 2062 E250),"laser cut, drill, weld seat block",outsource,plate 15 × 380 × 300,A1 saddle,13.327,
+A1-02,Saddle rear plate,1,S275 (IS 2062 E250),"laser cut, drill",outsource,plate 15 × 380 × 300,A1 saddle,13.327,
+A1-03,Seat block (welded to the front plate),1,S275 (IS 2062 E250),"saw cut, mill top flat, drill, tap, weld",outsource,flat 25 × 160 × 150,A1 saddle,4.665,top face flat 0.1 mm and flush with the front plate top
+A1-04,Boom strap,2,S275 (IS 2062 E250),"saw cut, drill",make,flat 12 × 40 × 160,A1 saddle,0.585,
+B1-01,Boom tube,1,S275 (IS 2062 E250),"saw cut square, weld",outsource,RHS 100×100×4 × 950,B1 boom,11.455,
+B1-02,Boom flange,1,S275 (IS 2062 E250),"laser cut, weld, then face-mill and drill after welding",outsource,plate 20 × 200 × 200,B1 boom,4.57,front face flat 0.05 mm and square to the tube axis 0.1 mm after welding
+B1-03,Boom end cap,1,S275 (IS 2062 E250),"laser cut, weld",outsource,plate 5 × 100 × 100,B1 boom,0.392,
+HL-01,"Head frame (fixed): back wall, torque-flexure collar, torque-cell bracket",1,Al 7075-T6,"CNC mill from solid, 3 setups; wire-EDM the collar slots",make,block 96 × 300 × 205,H-L measuring head,4.452,collar slots 0.42 +0.01/0 wide; collar bore concentric to the dowel holes 0.02 mm
+HL-02,"Torque stage (one piece): hub, plate, arms, torque arm",1,Al 7075-T6,"CNC turn the hub, mill the rest from solid; wire-EDM the hub slots",make,block 148 × 255 × 290,H-L measuring head,4.776,hub slots 0.42 +0.01/0; rib faces flat 0.01 and parallel 0.01 mm; torque-cell hole at r = 150 ± 0.05 mm
+HL-03,Thrust carriage,1,Al 7075-T6,"CNC mill from solid, 2 setups",make,block 45 × 125 × 163,H-L measuring head,0.718,"rib faces flat 0.01 mm, parallel to the torque-stage ribs 0.02 mm when assembled; lightest part of the head: no material may be added"
+B-02,"Load cell, micro S-type, 20/50 kg, M6×1, 0.05 % FS (thrust)",1,bought,—,buy,catalogue part,load cells,0.071,"ATO DYLY-106 class: 25 × 30 × 12 mm, 2 × M6×1 (datasheet drawing); measure on delivery"
+HL-04,Thrust flexure blade,4,"spring steel, EN42 / 301 full-hard","wire-EDM or photo-etch from shim, deburr",outsource,shim 0.5 × 50 × 90,H-L measuring head,0.017,free length 50 mm between clamp edges; no scratches across the width; edges deburred
+HL-05,Blade clamp bar,8,S275 (IS 2062 E250),"mill, surface-grind the clamp face",make,flat 8 × 50 × 20,H-L measuring head,0.061,clamp face ground flat 0.005 mm; clamp edge sharp
+HL-06,Torque flexure blade,4,"spring steel, EN42 / 301 full-hard","wire-EDM or photo-etch from shim, deburr",outsource,shim 0.4 × 40 × 60,H-L measuring head,0.008,free length 40 mm between slot edges
+B-03,"Load cell, micro S-type, 10/30 kg, M6×1, 0.05 % FS (torque)",1,bought,—,buy,catalogue part,load cells,0.071,as B-02
+HL-07,Motor adapter (one per motor pattern),1,Al 7075-T6,"CNC turn, drill",make,block 15 × 115 × 115,H-L measuring head,0.256,motor pattern: placeholder until the motor drawing is in hand; faces parallel 0.02 mm
+P-01,Motor (placeholder envelope),1,bought,—,buy,test article,test article,4.476,
+P-02,Prop Ø1370 (placeholder envelope),1,bought,—,buy,test article,test article,10.799,
+W2-01,Portal post,2,S275 (IS 2062 E250),"saw cut, drill on a jig, weld",outsource,RHS 80×80×4 × 2280,W2 ring portal,21.477,"holes on 50 mm pitch, ±0.2 mm cumulative, both posts drilled as a pair"
+W2-02,Portal foot,2,S275 (IS 2062 E250),"saw cut, weld",outsource,RHS 80×80×4 × 900,W2 ring portal,8.591,
+W2-03,Portal knee brace,4,S275 (IS 2062 E250),"saw cut both ends (on the CAD), weld",outsource,RHS 60×60×4 × 1000,W2 ring portal,6.035,
+W2-04,Portal top tie,1,S275 (IS 2062 E250),"saw cut, weld",outsource,RHS 80×80×4 × 1630,W2 ring portal,15.559,
+W2-05,Portal beam (on the rails),1,S275 (IS 2062 E250),"saw cut, drill, weld",outsource,RHS 80×80×4 × 1630,W2 ring portal,15.523,
+W2-06,Rail clamp plate,2,S275 (IS 2062 E250),"laser cut, drill",make,plate 12 × 80 × 150,W2 ring portal,1.103,
+R1-01,"Containment band (rolled, butt-welded)",1,S275 (IS 2062 E250),"roll plate to Ø, full-penetration butt weld, grind flush, UT the seam",outsource,plate 10 × 300 × 4712,R1 containment ring,110.977,seam at the bottom; band plate qualified by a coupon impact test before first use
+R1-02,Ring lug plate,2,S275 (IS 2062 E250),"laser cut, drill, weld",outsource,plate 20 × 120 × 220,R1 containment ring,4.069,
+R1-03,Ring lug rib,4,S275 (IS 2062 E250),"laser cut, weld",outsource,plate 12 × 90 × 180,R1 containment ring,0.709,
+CL-01,Thrust calibration plate (replaces the motor adapter),1,Al 7075-T6,"CNC turn, drill, tap",make,block 20 × 91 × 91,C calibration kit,0.236,eye bolt DIN 580 M8; pull line on the thrust axis ±0.5 mm
+CL-02,Torque calibration bar,1,Al 7075-T6,"CNC mill, jig-bore the load-pin holes",make,block 17 × 335 × 29,C calibration kit,0.259,load-pin holes at the radii ±0.02 mm from the pattern centre

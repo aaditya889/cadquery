@@ -59,8 +59,8 @@ class MountingPlate(Component):
             )
             
         # Register standard ports
-        self.register_port("center", cq.Vector(0, 0, self.thickness / 2.0))
-        self.register_port("top_face", cq.Vector(0, 0, self.thickness))
-        self.register_port("bottom_face", cq.Vector(0, 0, 0))
+        self.add_port("center", origin=(0, 0, self.thickness / 2.0), normal=(0, 0, 1))
+        self.add_port("top_face", origin=(0, 0, self.thickness), normal=(0, 0, 1))
+        self.add_port("bottom_face", origin=(0, 0, 0), normal=(0, 0, -1))
         
         return plate

@@ -11,8 +11,8 @@ import cadquery as cq
 
 def to_shape(obj) -> cq.Shape:
     """Extract raw CadQuery Shape from Workplane, Assembly, Compound, or Solid."""
-    if hasattr(obj, "build"):       # Component instance
-        obj = obj.build()
+    if hasattr(obj, "world"):       # Component instance: its placed (world) geometry
+        obj = obj.world()
     if hasattr(obj, "toCompound"):  # Assembly
         return obj.toCompound()
     if hasattr(obj, "val"):         # Workplane
@@ -62,6 +62,28 @@ def fuse_all(*parts) -> cq.Workplane:
         raise ValueError("fuse_all received no valid solids to fuse.")
         
     return cq.Workplane().add(all_solids).combine()
+
+
+def place_on(base, part, plane: cq.Plane, sink: float = 0, anchor=None) -> cq.Workplane:
+    """
+    Moves `part` onto `plane` and unions it with `base`.
+    By default the part's local origin lands on the plane origin and its local +Z follows the plane's
+    normal, so build parts with their bottom on Z=0. `sink` pushes the part into the base so the two overlap.
+
+    `anchor` picks a different attachment frame on the part: a cq.Location, cq.Plane or Port
+    (anything with `.location`), in the part's current coordinates. That frame is mapped onto `plane`.
+
+    Usage:
+        top = column.faces(">Z").workplane().plane
+        column = place_on(column, ring, top, sink=2)
+        column = place_on(column, bracket, top, anchor=bracket.port("bottom"))
+    """
+    shape = to_shape(part)
+    loc = plane.location * cq.Location((0, 0, -sink))
+    if anchor is not None:
+        anchor_loc = anchor if isinstance(anchor, cq.Location) else anchor.location
+        loc = loc * anchor_loc.inverse
+    return to_workplane(base).union(shape.moved(loc))
 
 
 def find_junction_edges(fused_model, part_a, part_b, tolerance: float = 0.5) -> cq.Workplane:

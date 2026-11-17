@@ -10,6 +10,26 @@ Parametric `Component` classes, named ports, and operations that return both geo
 
 The problem: geometry, ports and workplanes are changed in place. That is fine for 3 parts but produces order-dependent, hard-to-trace bugs at 30. Bugs 1 and 2 below are the ones to fix first; everything else builds on them.
 
+## Status (30 Oct 2026)
+
+All five bugs and the smaller items below are fixed except the `@dataclass` parameter refactor of the existing parts
+(new code such as `projects/prop_dyno.py` uses dataclasses) and the assembly-output layer.
+
+| Item | Fix applied | Verified by |
+|---|---|---|
+| Bug 1 | `Component.location` is the only placement; `attach()` sets `child.location = target * flip * child_port.inverse`; ports and solids are never moved | `tests/test_core.py`: repeatable mates, rebuild after placement |
+| Bug 2 | `Port` stores one `cq.Location`; `plane` / `normal_vector` / `x_dir` are derived with `plane_from_location()` (no Euler round trip); `x_dir` is honoured | tests: x direction kept through construction, moves and mates |
+| Bug 3 | `self.workplanes` removed; `component.workplane(port)` / `port.workplane()` create one on demand | — |
+| Bug 4 | `add_ports_from_planes()` registers slot planes as ports (`"droneStandSlots.<X.floor"`); `tagged_planes` removed | tests: slot ports move with the part |
+| Bug 5 | `build()` clears and re-registers ports on every (re)build; parts call `self.build()` in `__init__` | tests: rebuild keeps solid and ports together |
+| `MountingPlate` | called a non-existent `register_port`; now `add_port` | tests: plate builds, ports present |
+| `ports.py` | imported `Component` from `core` (circular); removed, with the debug prints | — |
+| `cadMath.get_new_workplane` | dead after the fix and flipped normals; removed | — |
+| `__pycache__` | untracked from git (`*.pyc` already ignored) | `git ls-files` |
+| `projects/drone_gimbal.py` | failed on the old core (`KeyError: Port 'bottom_mount'`: ports read before the part was built); now runs, and the pillar `x_dir` is honoured so both bearing cups sit symmetrically | run |
+
+Existing parts in `hardware/parts.py` build to identical volumes and bounding boxes before and after the change.
+
 ## Bug 1: Mating changes state in place, so results depend on call order
 
 **Where:** `attach()` in `core/ports.py`, `Port.invert_normal`
@@ -131,10 +151,12 @@ floor_face = stand.faces(cq.selectors.NearestToPointSelector(plane.origin.toTupl
 
 ## Suggested order of work
 
-- [ ] Bug 2: make `cq.Location` the single source of truth in `Port`, keeping `xDir`
-- [ ] Bug 1: immutable local ports plus a `location` per component; mating sets only the location
-- [ ] Bug 3: remove `self.workplanes`
-- [ ] Bug 5: make `_build` return `(solid, ports)` with no side effects
-- [ ] Bug 4: register slot planes as ports
-- [ ] Add `pytest` checks for port positions after mating
-- [ ] Untrack `__pycache__` from git
+- [x] Bug 2: make `cq.Location` the single source of truth in `Port`, keeping `xDir`
+- [x] Bug 1: immutable local ports plus a `location` per component; mating sets only the location
+- [x] Bug 3: remove `self.workplanes`
+- [x] Bug 5: `_build` may return `(solid, ports)`; `build()` re-registers ports on every build
+- [x] Bug 4: register slot planes as ports
+- [x] Add checks for port positions after mating (`tests/test_core.py`, runs with or without pytest)
+- [x] Untrack `__pycache__` from git
+- [ ] `@dataclass` parameter objects for the existing parts in `hardware/parts.py`
+- [ ] Output a `cq.Assembly` from the port/mate layer
